@@ -7,6 +7,7 @@ For Comp 310 Assignment 1
 #include <stdio.h>
 #include <unistd.h>
 #define MAX_LINE 80 /* 80 chars per line, per command, should be enough. */
+
 /**
 * setup() reads in the next command line, separating it into distinct tokens
 * using whitespace as delimiters. setup() sets the args parameter as a
@@ -41,28 +42,32 @@ void setup(char inputBuffer[], char *args[], int *background)
 	 	{
 		 	case ' ':
 		 	case '\t': /* argument separators */
-				if(start != -1){
+				if(start != -1)
+				{
 					args[ct] = &inputBuffer[start]; /* set up pointer */
 					ct++;
 				}
 				inputBuffer[i] = '\0'; /* add a null char; make a C string */
 				start = -1;
 				break;
+
 			case '\n': /* should be the final char examined */
-				if (start != -1){
+				if (start != -1)
+				{
 					args[ct] = &inputBuffer[start];
 					ct++;
 				}
 				inputBuffer[i] = '\0';
 				args[ct] = NULL; /* no more arguments to this command */
 				break;
+
 			default: /* some other character */
 				if (start == -1)
 					start = i;
 				if (inputBuffer[i] == '&')
 				{
 					*background = 1;
-		 			inputBuffer[i] = '\0'; //ECSE 427/COMP 310 Winter 2015
+		 			inputBuffer[i] = '\0';
 				}
 		}
  	}
@@ -75,16 +80,45 @@ int main(void)
 	int background; /* equals 1 if a command is followed by '&' */
 	char *args[MAX_LINE/+1]; /* command line (of 80) has max of 40 arguments */
 
+	int pid; /* pid of processes created by fork */
+	int status; /* status of child process */
+
 	while (1)
 	{ /* Program terminates normally inside setup */
 		background = 0;
 		printf(" COMMAND->\n");
 		setup(inputBuffer, args, &background); /* get next command */
+
+		pid = fork();
+
+		//child process
+		if(pid == 0)
+		{
+			printf("Child pid: %d.\n", pid);
+			if(execvp(args[0], args) < 0)
+			{
+				printf("*** FAILED TO EXECUTE COMMAND ***");
+			}
+		}
+
+		//parent process
+		else
+		{
+			printf("Parent pid: %d.\n", pid);
+			//if backgroup == 1, the parent waits for the child process to finish execution
+			if(background == 1)
+			{
+				//wait on child process with id pid
+				waitpid(pid, &status, 0);
+			}
+		}
+
 		/* the steps are:
 		(1) fork a child process using fork()
 		(2) the child process will invoke execvp()
 		(3) if background == 1, the parent will wait,
 		otherwise returns to the setup() function. */
+
 	}
 }
 
