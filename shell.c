@@ -10,21 +10,21 @@ For Comp 310 Assignment 1
 
 //linked list of commands, used to implement history feature
 struct commandNode{
-	char* command[];
+	char* command[40];
 	int recency;
 	struct commandNode* previous;
-};
+}commandNode;
 
 /*
 creates a new command, adds it to the head of the command list, and returns a reference
 to the head of the command list
 */
 struct commandNode* addCommandToHistory(struct commandNode* headCommand, char* newCommand[]){
-	struct commandNode newNode;
-	newNode.command = newCommand;
-	newNode.recency = headCommand->recency + 1;
-	newNode.previous = headCommand;
-	return &newNode;
+	struct commandNode* newNode = malloc(sizeOf(commandNode));
+	newNode->command = newCommand;
+	newNode->recency = headCommand->recency + 1;
+	newNode->previous = headCommand;
+	return newNode;
 }
 
 /**
@@ -107,11 +107,11 @@ void printWorkingDirectory() {
 	}
 }
 
-void listBackgroundJobs(int[] backgroudPIDs, int numBackgroundProcesses){
-	int i = 0;
+void listBackgroundJobs(int backgroundPIDs[], int numBackgroundProcesses){
+	int i;
 	printf("PIDs of jobs running in the background: ");
-	for(i; i < numBackgroundProcesses; i++){
-		printf("%d, ", backgroudPIDs[i]);
+	for(i = 0; i < numBackgroundProcesses; i++){
+		printf("%d, ", backgroundPIDs[i]);
 	}
 }
 
@@ -125,9 +125,9 @@ void bringToForeground(int pid){
 */
 void executeFromHistory(struct commandNode* headCommand, char c){
 	int n = 10;
-	struct commandNode* tmp = headNode;
+	struct commandNode* tmp = headCommand;
 	while(n > 0){
-		if(tmp->command == null){
+		if(tmp->command == NULL){
 			printf("A command starting with %c isn't in your history.\n", c);
 		}
 
@@ -184,13 +184,13 @@ int main(void){
 				changeDirectory(args[1]);
 			}
 
-			else if(strmp(args[0], "pwd") == 0){
+			else if(strcmp(args[0], "pwd") == 0){
 				printWorkingDirectory();
 			}
 
 			else if(strcmp(args[0], "r") == 0){
-				//TODO
-				executeFromHistory();
+				//is *args[1] the proper way to reference the single character?
+				executeFromHistory(headCommand, *args[1]);
 			}
 
 			else if(strcmp(args[0], "exit") == 0){
@@ -198,7 +198,7 @@ int main(void){
 			}
 
 			else if(strcmp(args[0], "jobs") == 0){
-				listBackgroundJobs();
+				listBackgroundJobs(backgroudPIDs, numBackgroundProcesses);
 			}
 
 			else if(strcmp(args[0], "fg") == 0){
