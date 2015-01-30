@@ -6,26 +6,8 @@ For Comp 310 Assignment 1
 #include <stdlib.h>
 #include <stdio.h>
 #include <unistd.h>
+#include <commandlist.h>
 #define MAX_LINE 80 /* 80 chars per line, per command, should be enough. */
-
-//linked list of commands, used to implement history feature
-struct commandNode{
-	char* command[40];
-	int recency;
-	struct commandNode* previous;
-}commandNode;
-
-/*
-creates a new command, adds it to the head of the command list, and returns a reference
-to the head of the command list
-*/
-struct commandNode* addCommandToHistory(struct commandNode* headCommand, char* newCommand[]){
-	struct commandNode* newNode = malloc(sizeOf(commandNode));
-	newNode->command = newCommand;
-	newNode->recency = headCommand->recency + 1;
-	newNode->previous = headCommand;
-	return newNode;
-}
 
 /**
 * setup() reads in the next command line, separating it into distinct tokens
@@ -123,30 +105,14 @@ void bringToForeground(int pid){
 * exectuces the nth most recent command stored in history.
 * @pre n <= 10
 */
-void executeFromHistory(struct commandNode* headCommand, char c){
-	int n = 10;
-	struct commandNode* tmp = headCommand;
-	while(n > 0){
-		if(tmp->command == NULL){
-			printf("A command starting with %c isn't in your history.\n", c);
-		}
+void executeFromHistory(commandNode* headCommand, char c){
+	commandNode* newCommand;
+	if(newCommand = (getCommand(headCommand, c)) != NULL){
 
-		//if the first character of the command equals char c
-		if(*(tmp->command[0])) == c){
-			struct commandNode* newNode;
-			newNode->command = tmp->command;
-			newNode->recency = headNode->recency + 1;
-			newNode->previous = headNode;
-
-			//TODO execute newNode->command
-			//TODO print newNode->command
-
-			break;
-		}
-		tmp = tmp->previous;
 	}
-
-	printf("A command starting with %c isn't in your history.\n", c);
+	else{
+		printf("A command starting with %c isn't in your history.\n", c);
+	}
 }
 
 void executeKernelCommand(){
@@ -164,7 +130,7 @@ int main(void){
 
 	int pid; /* pid of processes created by fork */
 	int status; /* status of child process */
-	struct commandNode* headCommand;
+	commandNode* headCommand;
 
 	int numBackgroundProcesses = 0;
 	int backgroudPIDs[100];
@@ -188,13 +154,13 @@ int main(void){
 				printWorkingDirectory();
 			}
 
+			else if(strcmp(args[0], "exit") == 0){
+				exit(0);
+			}
+
 			else if(strcmp(args[0], "r") == 0){
 				//is *args[1] the proper way to reference the single character?
 				executeFromHistory(headCommand, *args[1]);
-			}
-
-			else if(strcmp(args[0], "exit") == 0){
-				exit(0);
 			}
 
 			else if(strcmp(args[0], "jobs") == 0){
@@ -202,7 +168,7 @@ int main(void){
 			}
 
 			else if(strcmp(args[0], "fg") == 0){
-
+				bringToForeground(args[1]);
 			}
 
 			//if none of the above, send to the kernel
@@ -218,21 +184,19 @@ int main(void){
 			// printf("Parent pid: %d.\n", pid);
 			//if backgroup == 1, the parent waits for the child process to finish execution
 			if(background == 1){
-				backgroudPIDs[numBackgroundProcesses] = pid;
-				numBackgroundProcesses++;
-
 				//wait on child process with id pid
 				printf("waiting.... \n");
 				waitpid(pid, &status, 0);
 				printf("done!\n");
 			}
-		}
 
-		/* the steps are:
-		(1) fork a child process using fork()
-		(2) the child process will invoke execvp()
-		(3) if background == 1, the parent will wait,
-		otherwise returns to the setup() function. */
+			//otherwise, let child run concurrently
+			else{
+				//add child pid to collection of child numBackgroundProcesses
+				backgroudPIDs[numBackgroundProcesses] = pid;
+				numBackgroundProcesses++;
+			}
+		}
 	}
 }
 
