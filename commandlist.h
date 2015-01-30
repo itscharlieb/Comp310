@@ -3,7 +3,6 @@ Author: Charles Bloomfield, 260520615
 For Comp 310, Assignment 1
 */
 
-#define NULL (void *)0
 #include <stdlib.h>
 
 //linked list of commands, used to implement history feature

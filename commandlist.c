@@ -4,15 +4,14 @@ For Comp 310, Assignment 1
 */
 
 #include <commandlist.h>
-#include <stdlib.h>
-
+#include <string.h>
 /*
 creates a new command, adds it to the head of the command list, and returns a reference
-to the head of the command list
+to the new head of the command list
 */
 commandNode* addCommandToHistory(commandNode* headCommand, char* newCommand[]){
-	commandNode* newNode = malloc(sizeOf(commandNode));
-	headCommand->command = newCommand;
+	commandNode* newNode = malloc(sizeof(commandNode));
+	memcopy(headCommand->command, newCommand, 40);
 	newNode->recency = headCommand->recency + 1;
 	newNode->previous = headCommand;
 	return newNode;
@@ -30,12 +29,9 @@ commandNode* getCommand(commandNode* headCommand, char c){
 			return NULL;
 
 		//if the first character of the command equals char c
-		if(*(tmp->command[0])) == c){
-			commandNode* newNode = malloc(sizeOf(commandNode));
-			newNode->command = tmp->command;
-			newNode->recency = headNode->recency + 1;
-			newNode->previous = headNode;
-			return newNode;]
+		char h = *(tmp->command[0]);
+		if(h == c){
+			return addCommandToHistory(headCommand, tmp->command);
 		}
 		tmp = tmp->previous;
 	}

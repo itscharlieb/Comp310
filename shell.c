@@ -6,7 +6,8 @@ For Comp 310 Assignment 1
 #include <stdlib.h>
 #include <stdio.h>
 #include <unistd.h>
-#include <commandlist.h>
+#include <string.h>
+//#include <commandlist.h>
 #define MAX_LINE 80 /* 80 chars per line, per command, should be enough. */
 
 /**
@@ -74,31 +75,68 @@ void changeDirectory(char* directory){
 
 void printWorkingDirectory() {
 	int MAX_DIRECTORY_LENGTH = 128;
-
-	//directory buffer
-	char directoryBuffer[MAX_DIRECTORY_LENGTH];
+	char directoryBuffer[MAX_DIRECTORY_LENGTH]; //directory buffer
 
 	//if getcwd correctly copies the working directory in the buffer
 	if(getcwd(directoryBuffer, MAX_DIRECTORY_LENGTH) != NULL) {
-		printf("%s", directoryBuffer);
+		printf("%s\n", directoryBuffer);
 	}
-
 	//if getcwd returns NULL
 	else {
 		printf("Directory is too long.");
 	}
 }
 
-void listBackgroundJobs(int backgroundPIDs[], int numBackgroundProcesses){
-	int i;
-	printf("PIDs of jobs running in the background: ");
-	for(i = 0; i < numBackgroundProcesses; i++){
-		printf("%d, ", backgroundPIDs[i]);
+void listBackgroundJobs(pid_t backgroundPIDs[], int *numBackgroundProcesses){
+	int i, status;
+	pid_t cpid, endID;
+
+	printf("numBackgroundProcesses in jobs call = %d\n", *numBackgroundProcesses);
+
+	if(*numBackgroundProcesses == 0){
+		printf("No background processes running.\n");
+	}
+
+	else{
+		printf("PIDs of jobs running in the background: \n");
+		for(i = 0; i < *numBackgroundProcesses; i++){
+			cpid = backgroundPIDs[i];
+
+			printf("%d", cpid);
+
+			endID = waitpid(cpid, &status, WNOHANG|WUNTRACED);
+			printf("Return value from waitpid call: %d\n", endID);
+
+			//waitpid failure
+			if(endID == -1){
+				printf("Call to waitpid failed.\n");
+			}
+
+			//process cpid is still running
+			else if(endID == 0){
+				printf("child process %d still running.\n", cpid);
+			}
+
+			//child process is not running
+			else{
+				if (WIFEXITED(status)){
+					printf("Child ended normally.\n");
+					--*numBackgroundProcesses;
+				}
+				else if (WIFSIGNALED(status))
+					printf("Child ended because of an uncaught signal.\n");
+				else if (WIFSTOPPED(status))
+					printf("Child process has stopped.\n");
+			}
+		}
 	}
 }
 
 void bringToForeground(int pid){
-
+	int status;
+	printf("Waiting on process %d.\n", pid);
+	waitpid(pid, &status, 0);
+	printf("Process %d is complete.\n", pid);
 }
 
 /*
@@ -115,88 +153,77 @@ void executeFromHistory(commandNode* headCommand, char c){
 	}
 }
 
-void executeKernelCommand(){
-
-}
-
-void executeBuiltInCommand(){
-
-}
-
 int main(void){
 	char inputBuffer[MAX_LINE]; /* buffer to hold the command entered */
 	int background; /* equals 1 if a command is followed by '&' */
 	char *args[MAX_LINE/+1]; /* command line (of 80) has max of 40 arguments */
 
-	int pid; /* pid of processes created by fork */
+	pid_t pid; /* pid of processes created by fork */
 	int status; /* status of child process */
-	commandNode* headCommand;
+	//commandNode* headCommand;
 
 	int numBackgroundProcesses = 0;
-	int backgroudPIDs[100];
+	pid_t backgroundPIDs[100];
 
 	while (1){ /* Program terminates normally inside setup */
 		background = 0;
 		printf("COMMAND->\n");
 		setup(inputBuffer, args, &background); /* get next command */
 
-		pid = fork();
-
-		//child process
-		if(pid == 0){
-			// printf("Child pid: %d.\n", pid);
-			if(strcmp(args[0], "cd") == 0){
-				//directory is the second argument ???
-				changeDirectory(args[1]);
-			}
-
-			else if(strcmp(args[0], "pwd") == 0){
-				printWorkingDirectory();
-			}
-
-			else if(strcmp(args[0], "exit") == 0){
-				exit(0);
-			}
-
-			else if(strcmp(args[0], "r") == 0){
-				//is *args[1] the proper way to reference the single character?
-				executeFromHistory(headCommand, *args[1]);
-			}
-
-			else if(strcmp(args[0], "jobs") == 0){
-				listBackgroundJobs(backgroudPIDs, numBackgroundProcesses);
-			}
-
-			else if(strcmp(args[0], "fg") == 0){
-				bringToForeground(args[1]);
-			}
-
-			//if none of the above, send to the kernel
-			else{
-				if(execvp(args[0], args) < 0){
-					printf("*** FAILED TO EXECUTE COMMAND ***");
-				}
-			}
+		if(strcmp(args[0], "cd") == 0){
+			changeDirectory(args[1]);
 		}
 
-		//parent process
+		else if(strcmp(args[0], "pwd") == 0){
+			printWorkingDirectory();
+		}
+
+		else if(strcmp(args[0], "jobs") == 0){
+			listBackgroundJobs(backgroundPIDs, &numBackgroundProcesses);
+		}
+
+		else if(strcmp(args[0], "fg") == 0){
+			bringToForeground(*args[1]);
+		}
+
+		else if(strcmp(args[0], "r") == 0){
+			//is *args[1] the proper way to reference the single character?
+			//executeFromHistory(headCommand, *args[1]);
+		}
+
+		else if(strcmp(args[0], "exit") == 0){
+			exit(0);
+		}
+
+		//if none of the above, create new process and use exec to run command
 		else{
-			// printf("Parent pid: %d.\n", pid);
-			//if backgroup == 1, the parent waits for the child process to finish execution
-			if(background == 1){
-				//wait on child process with id pid
-				printf("waiting.... \n");
-				waitpid(pid, &status, 0);
-				printf("done!\n");
+			pid = fork();
+
+			//child process
+			if(pid == 0){
+				//if execvp returns < 0, it failed
+				if(execvp(args[0], args) < 0){
+		 			printf("*** FAILED TO EXECUTE COMMAND ***");
+				}
 			}
 
-			//otherwise, let child run concurrently
+			//parent process
 			else{
-				//add child pid to collection of child numBackgroundProcesses
-				backgroudPIDs[numBackgroundProcesses] = pid;
-				numBackgroundProcesses++;
+				// printf("Parent pid: %d.\n", pid);
+				//if background == 1, let the child process run concurently
+				if(background == 1){
+					//add child pid to collection of child numBackgroundProcesses and increment numBackgroundProcesses
+					backgroundPIDs[numBackgroundProcesses] = pid;
+					numBackgroundProcesses++;
+				}
+
+				//otherwise, wait for the child to finish execution
+				else{
+					printf("waiting.... \n");
+					waitpid(pid, &status, 0);
+					printf("done!\n");
+				}
 			}
 		}
 	}
 }
-
