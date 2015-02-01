@@ -15,6 +15,7 @@ typedef struct commandList{
 	int numCommandsAdded;
 }commandList;
 
+//allocates space for a command list and inizializes it values properly
 commandList* createCommandList();
 
 //adds a command to the history, removing and old command if necessary
@@ -23,4 +24,5 @@ void addCommandToList(commandList* commandList, char* command[]);
 //returns a reference to the 
 char** getCommand(commandList* commandList, char c);
 
-void printList(commandList*);
+//prints the current state of commandList
+void printList(commandList* commandList);

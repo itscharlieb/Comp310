@@ -17,9 +17,7 @@ commandList* createCommandList(){
 }
 
 char firstChar(char** cpp){
-	char* cp = *cpp;
-	char c = *cp;
-	return c;
+	return **cpp;
 }
 
 //adds a command to the history, removing and old command if necessary
@@ -31,9 +29,9 @@ void addCommandToList(commandList* commandList, char* command[]){
 	if(commandList->head == 10){
 		commandList->head = 0;
 	}
-
+	
 	commandList->commands[commandList->head] = command;
-	printf("Command added.\n");
+	//printf("Command '%s' added.\n", command[0]);
 	printList(commandList);
 }
 
@@ -41,13 +39,13 @@ void addCommandToList(commandList* commandList, char* command[]){
 char** getCommand(commandList* commandList, char c){
 	int i;
 	int n = commandList->numCommandsAdded;
-	printf("Request get command.\n");
+	// printf("Request getCommand starting with %c.\n", c);
 	printList(commandList);
-	int headIndex = commandList->head;
+	int head = commandList->head;
 
 	//do circular search if more than n commands have been added
 	if(n > 10){
-		for(i = headIndex; i >= (headIndex - 10); i--){
+		for(i = head; i >= (head - 10); i--){
 			if(firstChar(commandList->commands[i % 10]) == c){
 				return commandList->commands[i % 10];
 			}
@@ -56,7 +54,7 @@ char** getCommand(commandList* commandList, char c){
 
 	//search starting at the head back to the beginning with no circulating.
 	else{
-		for(i = headIndex; i >= 0; i--){
+		for(i = head; i >= 0; i--){
 			if(firstChar(commandList->commands[i]) == c){
 				return commandList->commands[i];
 			}
@@ -67,10 +65,13 @@ char** getCommand(commandList* commandList, char c){
 	return NULL;
 }
 
-void printList(commandList* c){
+void printList(commandList* commandList){
+	int head = commandList->head;
 	int i;
-	for(i = 0; i < c->numCommandsAdded; i++){
-		char* command = *c->commands[i];
-		printf("Commands in your history: %s.\n", command);
+	printf("Commands in your history:\n");
+	for(i = 0; i < commandList->numCommandsAdded; i++){
+		char* command = *commandList->commands[i];
+		printf("%s.\n", command);
 	}
+	printf("Done history.\n");
 }

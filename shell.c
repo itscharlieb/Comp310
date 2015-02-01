@@ -69,6 +69,26 @@ void setup(char inputBuffer[], char *args[], int *background){
 	args[ct] = NULL; /* just in case the input line was > 80 */
 }
 
+void parse(char buffer[], char* args[], int *background){
+	int length;
+	int i = 0;
+	char* tmp;
+
+	//put in main function, or in separate function
+	length = read(STDIN_FILENO, buffer, MAX_LINE);
+
+	//tokenize with space and tab as delimiters
+	while((tmp = strtok(buffer, " ")) != NULL){
+		args[i] = tmp;
+		i++;
+	}
+
+	if(*args[i] == '&')
+		*background = 1;
+
+	printf("here");
+}
+
 void changeDirectory(char* directory){
 	chdir(directory);
 }
@@ -141,13 +161,69 @@ void bringToForeground(int pid){
 
 /*
 * exectuces the nth most recent command stored in history.
-* @pre n <= 10
 */
 void executeFromHistory(commandList* commandHistory, char c){
 	char** newCommand = getCommand(commandHistory, c);
 	if(newCommand != NULL){
 		//addCommandToList(commandList, newCommand);
 		execvp(*newCommand, newCommand);
+	}
+}
+
+void distributeCommand(char* args[], commandList* commandHistory, int backgroundPIDs[], int* numBackgroundProcesses, int background){
+	if(strcmp(args[0], "cd") == 0){
+		changeDirectory(args[1]);
+	}
+
+	else if(strcmp(args[0], "pwd") == 0){
+		printWorkingDirectory();
+	}
+
+	else if(strcmp(args[0], "jobs") == 0){
+		listBackgroundJobs(backgroundPIDs, numBackgroundProcesses);
+	}
+
+	else if(strcmp(args[0], "fg") == 0){
+		bringToForeground(*args[1]);
+	}
+
+	else if(strcmp(args[0], "r") == 0){
+		executeFromHistory(commandHistory, *args[1]);
+	}
+
+	else if(strcmp(args[0], "exit") == 0){
+		exit(0);
+	}
+
+	//fork a child process
+	else{
+		int pid = fork();
+
+		//child process
+		if(pid == 0){
+			//if execvp returns < 0, it failed
+			if(execvp(args[0], args) < 0){
+	 			printf("*** FAILED TO EXECUTE COMMAND ***");
+			}
+		}
+		//parent process, pid is that of the child process
+		else{
+			// printf("Parent pid: %d.\n", pid);
+			//if background == 1, let the child process run concurently
+			if(background == 1){
+				//add child pid to collection of child numBackgroundProcesses and increment numBackgroundProcesses
+				backgroundPIDs[*numBackgroundProcesses] = pid;
+				*numBackgroundProcesses = *numBackgroundProcesses + 1;
+			}
+
+			//otherwise, wait for the child to finish execution
+			else{
+				int status;
+				printf("waiting.... \n");
+				waitpid(pid, &status, 0);
+				printf("done!\n");
+			}
+		}
 	}
 }
 
@@ -167,63 +243,63 @@ int main(void){
 		background = 0;
 		printf("COMMAND->\n");
 		setup(inputBuffer, args, &background); /* get next command */
+		//parse(inputBuffer, args, &background);
+		distributeCommand(args, commandHistory, backgroundPIDs, &numBackgroundProcesses, background);
 
-		if(strcmp(args[0], "cd") == 0){
-			changeDirectory(args[1]);
-		}
+		// if(strcmp(args[0], "cd") == 0){
+		// 	changeDirectory(args[1]);
+		// }
 
-		else if(strcmp(args[0], "pwd") == 0){
-			printWorkingDirectory();
-		}
+		// else if(strcmp(args[0], "pwd") == 0){
+		// 	printWorkingDirectory();
+		// }
 
-		else if(strcmp(args[0], "jobs") == 0){
-			listBackgroundJobs(backgroundPIDs, &numBackgroundProcesses);
-		}
+		// else if(strcmp(args[0], "jobs") == 0){
+		// 	listBackgroundJobs(backgroundPIDs, &numBackgroundProcesses);
+		// }
 
-		else if(strcmp(args[0], "fg") == 0){
-			bringToForeground(*args[1]);
-		}
+		// else if(strcmp(args[0], "fg") == 0){
+		// 	bringToForeground(*args[1]);
+		// }
 
-		else if(strcmp(args[0], "r") == 0){
-			executeFromHistory(commandHistory, *args[1]);
-		}
+		// else if(strcmp(args[0], "r") == 0){
+		// 	executeFromHistory(commandHistory, *args[1]);
+		// }
 
-		else if(strcmp(args[0], "exit") == 0){
-			exit(0);
-		}
+		// else if(strcmp(args[0], "exit") == 0){
+		// 	exit(0);
+		// }
 
-		//if none of the above, create new process and use exec to run command
-		else{
-			pid = fork();
+		// //if none of the above, create new process and use exec to run command
+		// else{
+		// 	pid = fork();
 
-			//child process
-			if(pid == 0){
-				//if execvp returns < 0, it failed
-				if(execvp(args[0], args) < 0){
-		 			printf("*** FAILED TO EXECUTE COMMAND ***");
-				}
-			}
+		// 	//child process
+		// 	if(pid == 0){
+		// 		//if execvp returns < 0, it failed
+		// 		if(execvp(args[0], args) < 0){
+		//  			printf("*** FAILED TO EXECUTE COMMAND ***");
+		// 		}
+		// 	}
 
-			//parent process
-			else{
-				// printf("Parent pid: %d.\n", pid);
-				//if background == 1, let the child process run concurently
-				if(background == 1){
-					//add child pid to collection of child numBackgroundProcesses and increment numBackgroundProcesses
-					backgroundPIDs[numBackgroundProcesses] = pid;
-					numBackgroundProcesses++;
-				}
+		// 	//parent process
+		// 	else{
+		// 		// printf("Parent pid: %d.\n", pid);
+		// 		//if background == 1, let the child process run concurently
+		// 		if(background == 1){
+		// 			//add child pid to collection of child numBackgroundProcesses and increment numBackgroundProcesses
+		// 			backgroundPIDs[numBackgroundProcesses] = pid;
+		// 			numBackgroundProcesses++;
+		// 		}
 
-				//otherwise, wait for the child to finish execution
-				else{
-					printf("waiting.... \n");
-					waitpid(pid, &status, 0);
-					printf("done!\n");
-				}
-			}
-		}
-
-
+		// 		//otherwise, wait for the child to finish execution
+		// 		else{
+		// 			printf("waiting.... \n");
+		// 			waitpid(pid, &status, 0);
+		// 			printf("done!\n");
+		// 		}
+		// 	}
+		// }
 		addCommandToList(commandHistory, args);
 	}
 }
