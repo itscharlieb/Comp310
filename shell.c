@@ -7,7 +7,7 @@ For Comp 310 Assignment 1
 #include <stdio.h>
 #include <unistd.h>
 #include <string.h>
-//#include <commandlist.h>
+#include <commandlist.h>
 #define MAX_LINE 80 /* 80 chars per line, per command, should be enough. */
 
 /**
@@ -143,29 +143,27 @@ void bringToForeground(int pid){
 * exectuces the nth most recent command stored in history.
 * @pre n <= 10
 */
-void executeFromHistory(commandNode* headCommand, char c){
-	commandNode* newCommand;
-	if(newCommand = (getCommand(headCommand, c)) != NULL){
-
-	}
-	else{
-		printf("A command starting with %c isn't in your history.\n", c);
+void executeFromHistory(commandList* commandHistory, char c){
+	char** newCommand = getCommand(commandHistory, c);
+	if(newCommand != NULL){
+		//addCommandToList(commandList, newCommand);
+		execvp(*newCommand, newCommand);
 	}
 }
 
 int main(void){
-	char inputBuffer[MAX_LINE]; /* buffer to hold the command entered */
-	int background; /* equals 1 if a command is followed by '&' */
-	char *args[MAX_LINE/+1]; /* command line (of 80) has max of 40 arguments */
-
+	int background, status; /* equals 1 if a command is followed by '&' */
 	pid_t pid; /* pid of processes created by fork */
-	int status; /* status of child process */
-	//commandNode* headCommand;
 
 	int numBackgroundProcesses = 0;
 	pid_t backgroundPIDs[100];
+	commandList* commandHistory = createCommandList();
 
 	while (1){ /* Program terminates normally inside setup */
+		//realocate these buffers for each command to make implementing history easier
+		char* inputBuffer = (char*)malloc(sizeof(int) * MAX_LINE); /* buffer to hold the command entered */
+		char** args = (char**)malloc(sizeof(char*) * 40); /* command line (of 80) has max of 40 arguments */
+
 		background = 0;
 		printf("COMMAND->\n");
 		setup(inputBuffer, args, &background); /* get next command */
@@ -187,8 +185,7 @@ int main(void){
 		}
 
 		else if(strcmp(args[0], "r") == 0){
-			//is *args[1] the proper way to reference the single character?
-			//executeFromHistory(headCommand, *args[1]);
+			executeFromHistory(commandHistory, *args[1]);
 		}
 
 		else if(strcmp(args[0], "exit") == 0){
@@ -225,5 +222,8 @@ int main(void){
 				}
 			}
 		}
+
+
+		addCommandToList(commandHistory, args);
 	}
 }

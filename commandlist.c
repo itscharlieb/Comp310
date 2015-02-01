@@ -3,39 +3,74 @@ Author: Charles Bloomfield, 260520615
 For Comp 310, Assignment 1
 */
 
-#include <commandlist.h>
+#include <stdlib.h>
+#include <stdio.h>
+#include <unistd.h>
 #include <string.h>
-/*
-creates a new command, adds it to the head of the command list, and returns a reference
-to the new head of the command list
-*/
-commandNode* addCommandToHistory(commandNode* headCommand, char* newCommand[]){
-	commandNode* newNode = malloc(sizeof(commandNode));
-	memcopy(headCommand->command, newCommand, 40);
-	newNode->recency = headCommand->recency + 1;
-	newNode->previous = headCommand;
-	return newNode;
+#include <commandlist.h>
+
+commandList* createCommandList(){
+	commandList* c = malloc(sizeof(commandList));
+	c->head = -1;
+	c->numCommandsAdded = 0;
+	return c;
 }
 
-/*
-finds a command in the history starting with letter
-@param char c if the command exists
-*/
-commandNode* getCommand(commandNode* headCommand, char c){
-	int n = 10;
-	commandNode* tmp = headCommand;
-	while(n > 0){
-		if(tmp->command == NULL)
-			return NULL;
+char firstChar(char** cpp){
+	char* cp = *cpp;
+	char c = *cp;
+	return c;
+}
 
-		//if the first character of the command equals char c
-		char h = *(tmp->command[0]);
-		if(h == c){
-			return addCommandToHistory(headCommand, tmp->command);
-		}
-		tmp = tmp->previous;
+//adds a command to the history, removing and old command if necessary
+void addCommandToList(commandList* commandList, char* command[]){
+	commandList->head ++;
+	commandList->numCommandsAdded ++;
+
+	//loop back
+	if(commandList->head == 10){
+		commandList->head = 0;
 	}
 
-	return NULL; //return null if not in the most recent 10 commands
+	commandList->commands[commandList->head] = command;
+	printf("Command added.\n");
+	printList(commandList);
 }
 
+//returns a reference to the first command starting with character c
+char** getCommand(commandList* commandList, char c){
+	int i;
+	int n = commandList->numCommandsAdded;
+	printf("Request get command.\n");
+	printList(commandList);
+	int headIndex = commandList->head;
+
+	//do circular search if more than n commands have been added
+	if(n > 10){
+		for(i = headIndex; i >= (headIndex - 10); i--){
+			if(firstChar(commandList->commands[i % 10]) == c){
+				return commandList->commands[i % 10];
+			}
+		}
+	}
+
+	//search starting at the head back to the beginning with no circulating.
+	else{
+		for(i = headIndex; i >= 0; i--){
+			if(firstChar(commandList->commands[i]) == c){
+				return commandList->commands[i];
+			}
+		}
+	}
+
+	printf("There is no command starting with character '%c' in your history.\n", c);
+	return NULL;
+}
+
+void printList(commandList* c){
+	int i;
+	for(i = 0; i < c->numCommandsAdded; i++){
+		char* command = *c->commands[i];
+		printf("Commands in your history: %s.\n", command);
+	}
+}
