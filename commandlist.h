@@ -21,8 +21,8 @@ commandList* createCommandList();
 //adds a command to the history, removing and old command if necessary
 void addCommandToList(commandList* commandList, char* command[]);
 
-//returns a reference to the 
+//returns a reference to the most recent command starting with 'c'
 char** getCommand(commandList* commandList, char c);
 
-//prints the current state of commandList
-void printList(commandList* commandList);
+//returns a reference to the head command
+char** getHeadCommand(commandList* commandList);

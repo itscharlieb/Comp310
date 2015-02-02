@@ -3,10 +3,6 @@ Author: Charles Bloomfield, 260520615
 For Comp 310, Assignment 1
 */
 
-#include <stdlib.h>
-#include <stdio.h>
-#include <unistd.h>
-#include <string.h>
 #include <commandlist.h>
 
 commandList* createCommandList(){
@@ -29,10 +25,8 @@ void addCommandToList(commandList* commandList, char* command[]){
 	if(commandList->head == 10){
 		commandList->head = 0;
 	}
-	
+
 	commandList->commands[commandList->head] = command;
-	//printf("Command '%s' added.\n", command[0]);
-	printList(commandList);
 }
 
 //returns a reference to the first command starting with character c
@@ -40,7 +34,7 @@ char** getCommand(commandList* commandList, char c){
 	int i;
 	int n = commandList->numCommandsAdded;
 	// printf("Request getCommand starting with %c.\n", c);
-	printList(commandList);
+	//printList(commandList);
 	int head = commandList->head;
 
 	//do circular search if more than n commands have been added
@@ -65,13 +59,7 @@ char** getCommand(commandList* commandList, char c){
 	return NULL;
 }
 
-void printList(commandList* commandList){
-	int head = commandList->head;
-	int i;
-	printf("Commands in your history:\n");
-	for(i = 0; i < commandList->numCommandsAdded; i++){
-		char* command = *commandList->commands[i];
-		printf("%s.\n", command);
-	}
-	printf("Done history.\n");
+//returns a reference to the most recently added command
+char** getHeadCommand(commandList* commandList){
+	return commandList->commands[commandList->head];
 }
