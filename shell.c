@@ -5,6 +5,7 @@ For Comp 310 Assignment 1
 #include <commandlist.h>
 #include <shell.h>
 #define MAX_LINE 80 /* 80 chars per line, per command, should be enough. */
+#define MAX_BACKGROUND_JOBS 100
 
 /**
 * setup() reads in the next command line, separating it into distinct tokens
@@ -85,7 +86,10 @@ void printWorkingDirectory() {
 }
 
 void listBackgroundJobs(pid_t backgroundPIDs[], int *numBackgroundProcesses){
-	int i, status;
+	int i;//looping variable
+	int status;//variable to send to getpid
+	int numProcessesFinished = 0;//for cascading pids to the front of the pid array.
+	int n = *numBackgroundProcesses;//initial value of background processes
 	pid_t cpid, endID;
 
 	if(*numBackgroundProcesses == 0){
@@ -94,8 +98,13 @@ void listBackgroundJobs(pid_t backgroundPIDs[], int *numBackgroundProcesses){
 	}
 
 	printf("State of current child processes: \n");
-	for(i = 0; i < *numBackgroundProcesses; i++){
+	for(i = 0; i < n; i++){
 		cpid = backgroundPIDs[i];
+		if(numProcessesFinished > 0){
+			backgroundPIDs[i - numProcessesFinished] = backgroundPIDs[i];//cascade forward
+			backgroundPIDs[i] = 0;
+		}
+
 		endID = waitpid(cpid, &status, WNOHANG|WUNTRACED);
 
 		//waitpid failure
@@ -110,6 +119,7 @@ void listBackgroundJobs(pid_t backgroundPIDs[], int *numBackgroundProcesses){
 
 		//child process is not running
 		else{
+			numProcessesFinished++;
 			if (WIFEXITED(status)){
 				printf("Child process %d ended normally.\n", cpid);
 				--*numBackgroundProcesses;
@@ -181,6 +191,7 @@ int distributeCommand(char* args[], commandList* commandHistory, int backgroundP
 		}
 	}
 	else if(strcmp(args[0], "exit") == 0){
+		//free space from memory
 		exit(0);
 	}
 	//fork a child process
@@ -197,7 +208,6 @@ int distributeCommand(char* args[], commandList* commandHistory, int backgroundP
 		}
 		//parent process, pid is that of the child process
 		else{
-			// printf("Parent pid: %d.\n", pid);
 			//if background == 1, let the child process run concurently
 			if(background == 1){
 				//add child pid to collection of child numBackgroundProcesses and increment numBackgroundProcesses
@@ -220,12 +230,13 @@ int main(void){
 	pid_t pid; /* pid of processes created by fork */
 
 	int numBackgroundProcesses = 0;
-	pid_t backgroundPIDs[100];
-	commandList* commandHistory = createCommandList();
+	pid_t backgroundPIDs[MAX_BACKGROUND_JOBS];
+	commandList commandHistory;
+	//initializeCommandList(&scommandHistory);
 
 	while (1){ /* Program terminates normally inside setup */
 		//realocate these buffers for each command to make implementing history easier
-		char* inputBuffer = (char*)malloc(sizeof(int) * MAX_LINE); /* buffer to hold the command entered */
+		char* inputBuffer = (char*)malloc(sizeof(char) * MAX_LINE); /* buffer to hold the command entered */
 		char** args = (char**)malloc(sizeof(char*) * 40); /* command line (of 80) has max of 40 arguments */
 
 		background = 0;
@@ -234,8 +245,8 @@ int main(void){
 		if(setup(inputBuffer, args, &background) == 0){
 			//If the command is not a history command, add it directly to the history.
 			//Otherwise, it's taken care of in executeHistory
-			if(distributeCommand(args, commandHistory, backgroundPIDs, &numBackgroundProcesses, background) == 0){
-				addCommandToList(commandHistory, args);
+			if(distributeCommand(args, &commandHistory, backgroundPIDs, &numBackgroundProcesses, background) == 0){
+				addCommandToList(&commandHistory, args);
 			}
 		}
 		else{

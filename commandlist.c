@@ -5,12 +5,9 @@ For Comp 310, Assignment 1
 
 #include <commandlist.h>
 
-commandList* createCommandList(){
-	commandList* c = malloc(sizeof(commandList));
-	c->head = -1;
-	c->numCommandsAdded = 0;
-	return c;
-}
+// void initializeCommandList(commandList* commandList){
+// 	commandList->head = -1;
+// }
 
 char firstChar(char** cpp){
 	return **cpp;
@@ -18,15 +15,14 @@ char firstChar(char** cpp){
 
 //adds a command to the history, removing and old command if necessary
 void addCommandToList(commandList* commandList, char* command[]){
-	commandList->head ++;
-	commandList->numCommandsAdded ++;
-
 	//loop back
 	if(commandList->head == 10){
 		commandList->head = 0;
 	}
-
 	commandList->commands[commandList->head] = command;
+	
+	commandList->head ++;
+	commandList->numCommandsAdded ++;
 }
 
 //returns a reference to the first command starting with character c
