@@ -1,19 +1,44 @@
 /**
-@author Charlie Bloomfield
-February 19, 2015
-Comp 310 Assignment 2
+* @author Charlie Bloomfield
+* February 19, 2015
+* Comp 310 Assignment 2
 */
+
+#define _POSIX_C_SOURCE 200809L
 
 #include <stdlib.h>
 #include <stdio.h>
 #include <semaphore.h>
 #include <pthread.h>
-#include <time.h> //for random number generation
+#include <sys/time.h>
 
+typedef struct data{
+	double min;
+	double avg;
+	double max;
+}runtimeData;
+
+runtimeData readerData[100];
+runtimeData writerData[10];
+
+int numLoops;
 int sharedVariable = 0;
 int readCount = 0;
 sem_t sharedVariableMutex;
 sem_t readCountMutex;
+
+/**
+* @param timeval t1
+* @param timeval t2
+* @return the difference, in milliseconds, between start and finish
+*/
+double timeDiffernceInMilliseconds(struct timeval start, struct timeval finish){
+	double mStart = (start.tv_sec) * 1000 + (start.tv_usec) / 1000;
+	double mFinish = (finish.tv_sec) * 1000 + (finish.tv_usec) / 1000;
+
+	//printf("[mStart] %f. [mFinish] %f.\n", mStart, mFinish);
+	return (mFinish - mStart);
+}
 
 /** 
 *@param in upperBound
@@ -25,76 +50,161 @@ int getRandomBoundedBy(int upperBound){
 }
 
 /**
-*@returns a thread that reads the global variable sharedVariable
-*and then sleeps for a random amount of time between 0 and 100 milliseconds
+* displays the runtime data for each reader and writer thread.
+*/
+void displayRuntimeData(){
+	int i;
+	for(i = 0; i < 10; i++){
+		printf("[Writer Thread (%d)] [Min] %f. [Avg] %f. [Max] %f.\n", (i + 1), writerData[i].min, writerData[i].avg, writerData[i].max);
+	}
+
+	for(i = 0; i < 100; i++){
+		printf("[Reader Thread (%d)] [Min] %f. [Avg] %f. [Max] %f.\n", (i + 1), readerData[i].min, readerData[i].avg, readerData[i].max);
+	}
+}
+
+/**
+* prints the min, avg, and max valus from the input double array.
+*/
+void storeWaitingTimes(double waitTimes[], int isReader, int threadNum){
+	double min = -1, sum = 0, max = 0, avg, current;
+	int i;
+	for(i = 0; i < numLoops; i++){
+		current = waitTimes[i];
+		if(min < 0)
+			min = current; //first assignment
+		if(current < min)
+			min = current;
+		if(current > max)
+			max = current;
+		sum += current;
+	}
+
+	double numElements = (double) numLoops;
+	avg = sum / numElements;
+
+	if(isReader){
+		readerData[threadNum].min = min, readerData[threadNum].avg = avg, readerData[threadNum].max = max;
+	}
+	else{
+		writerData[threadNum].min = min, writerData[threadNum].avg = avg, writerData[threadNum].max = max;
+	}
+}
+
+/**
+* loops and tries to read the shared variable
 */
 void* readerFunction(void* arg){
-	int numLoops = *((int *) arg);
+	int threadNum = *((int *) arg);
+	double waitTimes[numLoops];
+	struct timeval start, finish;
 
 	int i;
 	for(i = 0; i < numLoops; i++){
-		sem_wait(&readCountMutex); //wait until read count variable is available
+		if(sem_wait(&readCountMutex) == -1) //wait until read count variable is available
+			printf("Error waiting on readCountMutex.\n");
+
 		readCount ++; //increment read count variable - this thread is now reading
-		if(readCount == 1){ //if there is already at least one thread reading, increment readCount variable
-			sem_wait(&sharedVariableMutex);
+
+		gettimeofday(&start, NULL); //start timer
+		if(readCount == 1){ //if this is the only thread currently accessing readCount, block sharedVariable
+			if(sem_wait(&sharedVariableMutex) == -1) //increment readCount variable
+				printf("Error waiting on sharedvariableMutex.\n");
 		}
-		sem_post(&readCountMutex); //singal reader threads waiting for access to read count variable
+		gettimeofday(&finish, NULL); //stop timer
+		waitTimes[i] = timeDiffernceInMilliseconds(start, finish);
 
-		printf("%d\n", sharedVariable); //read variable
+		if(sem_post(&readCountMutex) == -1) //singal reader threads waiting for access to read count variable
+			printf("Error signalling readCountMutex.\n");
 
-		sem_wait(&readCountMutex); //wait until read count variable is available
+		//DO READ. SHVINKTER!
+
+		if(sem_wait(&readCountMutex) == -1) 
+			printf("Error waiting on readCountMutex.\n"); //wait until read count variable is available
+
 		readCount --; //decrement read count variable - this thread is no longer reading
+
 		if(readCount == 0){ //if there are no reader threads reading the shared variable
-			sem_post(&sharedVariableMutex); //signal a writer thread
+			if(sem_post(&sharedVariableMutex) == -1) //signal threads waiting for access to the shared variable
+				printf("Error signalling sharedVariableMutex.\n");
 		}
-		sem_post(&readCountMutex); //signal reader threads waiting for access to read count variable
-		sleep(getRandomBoundedBy(100));
+
+		if(sem_post(&readCountMutex) == -1) //signal reader threads waiting for access to read count variable
+			printf("Error signalling readCountMutex.\n");
+
+		usleep(getRandomBoundedBy(100) * 1000);
 	}
 
+	storeWaitingTimes(waitTimes, 1, threadNum);
 	return NULL;
 }
 
 /**
-*@returns a thread the increments the global variable sharedVariable by 10
-*and then sleeps for a random amount of time between 0 and 100 milliseconds
+* loops and tries to write to the shared variable
 */
 void* writerFunction(void* arg){
-	int waitTime = 0;
-	int numLoops = *((int *) arg);
+	int threadNum = *((int *) arg);
+	double waitTimes[numLoops];
+	struct timeval start, finish;
+
 	int i;
 	for(i = 0; i < numLoops; i++){
-		if(sem_trywait(&sharedVariableMutex)){ //if can gain access to the shared variable
-			sharedVariable += 10; //increment shared variable by 10
-			sem_post(&sharedVariableMutex); //signal threads waiting on sharedVariable access
 
-			//TODO store waitTime somehow
-			return;
-		}
-		int random = getRandomBoundedBy(100);
-		sleep(random); //sleep for a while, BROSEPH
-		waitTime += random; //increment the amount of time that this writer thread has waited to access the shared variable
+		gettimeofday(&start, NULL); //start timer
+		if(sem_wait(&sharedVariableMutex) == -1) //if can gain access to the shared variable
+			printf("Error waiting on sharedVariableMutex.\n");
+		gettimeofday(&finish, NULL); //stop timer
+		waitTimes[i] = timeDiffernceInMilliseconds(start, finish);
+
+		sharedVariable += 10; //increment shared variable by 10
+		if(sem_post(&sharedVariableMutex) == -1) //signal threads waiting on sharedVariable access
+			printf("Error signalling sharedVariableMutex.\n");
+
+		usleep(getRandomBoundedBy(100) * 1000); //sleep for a while, BROSEPH
 	}
+
+	storeWaitingTimes(waitTimes, 0, threadNum);
+	return NULL;
 }
 
 int main(int argc, char* argv[]){
-	//TODO parse integer passed from command line
-	int numLoops = 1;
+	if(argc < 2){
+		printf("Pass an integer parameter to run the program");
+		exit(1);
+	}
+	numLoops = atoi(argv[1]);
 
-	sem_init(&sharedVariableMutex, 0, 1);
-	sem_init(&readCountMutex, 0, 1);
+	if(sem_init(&sharedVariableMutex, 0, 1) == -1){
+		printf("Error creating sharedVariableMutex semaphore.\n");
+		exit(-1);
+	}
+
+	if(sem_init(&readCountMutex, 0, 1) == -1){
+		printf("Error creating readCountMutex semaphore.\n");
+		exit(-1);
+	}
 
 	pthread_t writerThreads[10];
 	pthread_t readerThreads[100];
 
-	int validator;
-	int i;
-	for(i = 0; i < 10; i ++){
-		validator = pthread_create(&writerThreads[i], NULL, writerFunction, &numLoops);
+	int validator, i;
+
+	for(i = 0; i < 100; i ++){
+		validator = pthread_create(&readerThreads[i], NULL, readerFunction, &i);
 	}
 
-	// for(i = 0; i < 100; i ++){
-	// 	validator = pthread_create(&readerThreads[i], NULL, readerFunction, &numLoops);
-	// }
+	for(i = 0; i < 10; i ++){
+		validator = pthread_create(&writerThreads[i], NULL, writerFunction, &i);
+	}
 
-	printf("%d\n", sharedVariable);
+	char* b;
+	for(i = 0; i < 100; i++){
+		pthread_join(readerThreads[i], (void**)&b);
+	}
+
+	for(i = 0; i < 10; i++){
+		pthread_join(writerThreads[i], (void**)&b);
+	}
+	displayRuntimeData();
+	printf("[Value of shared variable back in main] %d.\n", sharedVariable);
 }
