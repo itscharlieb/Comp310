@@ -11,37 +11,38 @@ typedef struct {
 	inode* indirect;
 } inode;
 
-//TODO Probably do not need this file at all, it's not really providing any helpful functionality
+//TODO Probably do not need this file at all, it's not really providing any helpful functionality, just adding indirection
 
-inode* createInode(){
+//TODO make deep malloc of inode
+inode* create_inode(){
 	inode* i = malloc(sizeof(inode))
 }
 
-int getMode(inode* i){
+int get_mode(inode* i){
 	return i->mode;
 }
 
-int getLinkCount(inode* i){
+int get_link_count(inode* i){
 	return i->linkCount;
 }
 
-int getGID(inode* i){
+int get_gid(inode* i){
 	return i->gid;
 }
 
-int getSize(inode* i){
+int get_size(inode* i){
 	return i->size;
 }
 
-int getDirect(inode* i, int index){
+int get_direct(inode* i, int index){
 	return i->directPointers[index];
 }
 
-int[] getDirects(inode* i){
+int* get_directs(inode* i){
 	return i->directPointers;
 }
 
-inode* getIndirect(inode* i){
+inode* get_indirect(inode* i){
 	return i->indirect;
 }
 
