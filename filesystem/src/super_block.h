@@ -3,16 +3,23 @@
 * March 15, 2015
 */
 
-typedef struct {
-	unsigned int magic;
-	unsigned int blockSize;
-	unsigned int numBlocks;
-	unsigned int inodeTableLength;
-	unsigned int rootDirerctory;
-} superBlock;
+#include "types.h"
+#define MAGIC 0xAABB0005
 
-superBlock* create_super_block();
+//hard coded for now, could be flexible based on variable block size / inode size later on
+#define MAX_INODES_PER_BLOCK 13 //512 bytes per block / 37 bytes per inode = 13
+#define INODE_TABLE_LENGTH 128
+
+typedef struct {
+	half_word magic;
+	half_word blockSize;
+	half_word numBlocks;
+	half_word rootDirBlockNum;
+	byte inodeTableLength;
+} SuperBlock;
+
+SuperBlock* create_super_block();
 
 //used to write and read the super block from disk
-void to_string(superBlock* sb);
-void from_string(superBlock* sb, char buffer[])
+void super_block_to_string(SuperBlock* sb, byte* buffer);
+SuperBlock* super_block_from_string(byte* buffer);

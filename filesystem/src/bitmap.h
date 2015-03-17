@@ -4,9 +4,9 @@
 
 typedef struct {
 	//something
-} bitmap;
+} Bitmap;
 
-bitmap* init_bitmap(unsigned int size);
-void set_bit(bitmap b, unsigned int bitNumber);
-void clear_bit(bitmap b, unsigned int bitNumber);
-int get_bit(bitmap b, unsigned int bitNumber);
+Bitmap* init_bitmap(unsigned int size);
+void set_bit(Bitmap b, unsigned int bitNumber);
+void clear_bit(Bitmap b, unsigned int bitNumber);
+int get_bit(Bitmap b, unsigned int bitNumber);
