@@ -7,14 +7,14 @@
 #include "types.h"
 
 typedef struct {
-
+	Bitmap* freeBlockBitmap;
 } FreeBlockMap;
 
-FreeBlockMap* create_free_block_map(int numBlocks);
+void FBM_init(int numBlocks);
 
-int find_free_block(FreeBlockMap* f);
-void set_block_used(FreeBlockMap* f, int blockNum);
-void clear_block(FreeBlockMap* f, int blockNum);
+int FBM_find_free_block();
+void FBM_set_block_used(int blockNum);
+void FBM_clear_block(int blockNum);
 
-void to_string(FreeBlockMap* f, byte buffer[]);
-FreeBlockMap* from_string(byte buffer[]);
+void FBM_to_string(byte* buffer);
+void FBM_from_string(byte* buffer);

@@ -1,0 +1,30 @@
+binpath = ../bin
+srcpath = ../src
+execpath = ../exec
+
+all: $(binpath)/lex.yy.c $(binpath)/y.tab.h $(binpath)/y.tab.c $(binpath)/tree.o $(binpath)/pretty_printer.o $(binpath)/symbol_table.o $(binpath)/linked_list.o $(srcpath)/minitype.h $(binpath)/typecheck.o $(binpath)/main.o
+	gcc $(binpath)/tree.o $(binpath)/symbol_table.o $(binpath)/pretty_printer.o $(binpath)/linked_list.o $(srcpath)/minitype.h $(binpath)/typecheck.o $(binpath)/main.o $(binpath)/lex.yy.c $(binpath)/y.tab.h $(binpath)/y.tab.c -o $(execpath)/minilang_compiler -lfl
+
+$(binpath)/lex.yy.c: $(srcpath)/minilang_scanner.l
+	flex -o $(binpath)/lex.yy.c $(srcpath)/minilang_scanner.l
+
+$(binpath)/y.tab.h: $(srcpath)/minilang_parser.y
+	bison --yacc --defines --file-prefix $(binpath)/y $(srcpath)/minilang_parser.y
+
+$(binpath)/main.o: $(srcpath)/main.c $(binpath)/tree.o $(binpath)/pretty_printer.o $(binpath)/symbol_table.o
+	gcc -c $(srcpath)/main.c -o $(binpath)/main.o -std=c99
+
+$(binpath)/tree.o: $(srcpath)/tree.h $(srcpath)/tree.c
+	gcc -c $(srcpath)/tree.c -o $(binpath)/tree.o -std=c99
+
+$(binpath)/pretty_printer.o: $(srcpath)/pretty_printer.h $(srcpath)/pretty_printer.c
+	gcc -c $(srcpath)/pretty_printer.c -o $(binpath)/pretty_printer.o -std=c99
+
+$(binpath)/symbol_table.o: $(srcpath)/symbol_table.h $(srcpath)/symbol_table.c
+	gcc -c $(srcpath)/symbol_table.c -o $(binpath)/symbol_table.o -std=c99
+
+$(binpath)/linked_list.o: $(srcpath)/linked_list.h $(srcpath)/linked_list.c
+	gcc -c $(srcpath)/linked_list.c -o $(binpath)/linked_list.o -std=c99
+
+$(binpath)/typecheck.o: $(srcpath)/typecheck.h $(srcpath)/typecheck.c
+	gcc -c $(srcpath)/typecheck.c -o $(binpath)/typecheck.o -std=c99

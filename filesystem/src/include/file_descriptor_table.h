@@ -12,19 +12,20 @@ typedef struct {
 	int inodeNum; 
 } FileDescriptor;
 
+//will simply be an array of 100 file descriptors (there will only ever be 100 files)
 typedef struct {
 	int size;
 	FileDescriptor* fileDescriptors;
 } FileDescriptorTable;
 
-FileDescriptorTable* create_file_descriptor_table(FileDescriptorTable fdt, int size);
+void FDT_init(int size);
 
 //returns -1 if the specified inodeNum does not exist in the inode table    
-int get_file_id(FileDescriptorTable* fdt, int inodeNum);
-bool contains_file_id(FileDescriptorTable* fdt, int inodeNum);
+int FDT_get_file_id(int inodeNum);
+bool FDT_contains_file_id(int inodeNum);
 
-FileDescriptor* get_file_descriptor(FileDescriptorTable* fdt, int fileID);
-FileDescriptor* remove_file_descriptor(FileDescriptorTable* fdt, int fileID);
+FileDescriptor* FDT_get_file_descriptor(int fileID);
+void FDT_remove_file_descriptor(int fileID);
 
 //puts the inodeNum in the table AND returns the associated file descriptor
-int put_file_descriptor(FileDescriptorTable* fdt, int inodeNum);
+int FDT_put_file_descriptor(int inodeNum);

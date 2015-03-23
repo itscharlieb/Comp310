@@ -7,14 +7,14 @@
 #include "bitmap.h"
 
 typedef struct {
-
+	Bitmap* freeInodeBitmap;
 } FreeInodeMap;
 
-FreeInodeMap* create_free_inode_map(int numInodes);
+void FIM_init(int numInodes);
 
-int find_free_inode(FreeInodeMap* f);
-void set_inode_used(FreeInodeMap* f, int inodeNum);
-void free_inode(FreeInodeMap* f, int inodeNum);
+int FIM_find_free_inode();
+void FIM_set_inode_used(int inodeNum);
+void FIM_free_inode(int inodeNum);
 
-void to_string(FreeInodeMap* f, byte* buffer);
-FreeInodeMap* from_string(byte* buffer);
+void FIM_to_string(byte* buffer);
+void FIM_from_string(byte* buffer);

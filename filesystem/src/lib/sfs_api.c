@@ -12,7 +12,7 @@
 #include "super_block.h"
 #include "util.h"
 
-#define MAX_OPEN_FILES 10
+#define MAX_OPEN_FILES 100
 
 //constant block numbers
 #define SUPER_BLOCK_BLOCK_NUM 0
@@ -21,39 +21,30 @@
 
 const char fileName[] = "itscharlieb FS";
 
-//keep the following globally accessible as they are used by every function the sfs provides
-SuperBlock* superBlock;
-FreeInodeMap* freeInodeMap;
-FreeBlockMap* freeBlockMap;
-InodeCache* inodeCache;
-Directory* rootDirectory;
-FileDescriptorTable* fileDescriptorTable;
 
-
-/********************************INIT**********************************/
+/***********************************INIT**************************************/
 
 void init_free_inode_map(byte* buffer){
-	freeInodeMap = create_free_inode_map();
-	set_inode_used(freeInodeMap, ROOT_DIRECTORY_INODE_NUMBER);
-	free_inode_map_to_string(freeInodeMap, buffer)
+	FIM_init();
+	FIM_set_inode_used(ROOT_DIRECTORY_INODE_NUMBER);
+	FIM_to_string(buffer)
 	write_blocks(FREE_INODE_MAP_BLOCK_NUM, 1, buffer);
 }
 
 void init_free_block_map(byte* buffer){
-	FreeBlockMap* freeBlockMap = create_free_block_map();
-
-	set_block_used(freeBlockMap, SUPER_BLOCK_BLOCK_NUM);
+	FBM_init();
+	FBM_set_block_used(SUPER_BLOCK_BLOCK_NUM);
 
 	int i;
 	// blocks 1-128 hold inodes, not to be used for data
 	for(int i = 1; i < 129; i++){
-		set_block_used(freeBlockMap, i);
+		FBM_set_block_used(i);
 	}
 
-	set_block_used(freeBlockMap, FREE_BLOCK_MAP_BLOCK_NUM);
-	set_block_used(freeBlockMap, FREE_INODE_MAP_BLOCK_NUM);
+	FBM_set_block_used(FREE_BLOCK_MAP_BLOCK_NUM);
+	FBM_set_block_used(FREE_INODE_MAP_BLOCK_NUM);
 
-	free_block_map_to_string(freeBlockMap, buffer);
+	FBM_to_string(buffer);
 	write_blocks(FREE_BLOCK_MAP_BLOCK_NUM, 1, buffer);
 }
 
@@ -62,6 +53,10 @@ int init_super_block(byte* buffer){
 	superBlock = create_super_block();
 	super_block_to_string(superBlock, buffer);
 	write_blocks(SUPER_BLOCK_BLOCK_NUM, 1, buffer);
+}
+
+int init_directory(byte* buffer){
+	//TODO
 }
 
 int init_sfs(){
@@ -77,25 +72,30 @@ int init_sfs(){
 	init_super_block(buffer);
 	init_free_block_map(buffer);
 	init_free_inode_map(buffer);
+	init_directory(buffer);
 
 	free(buffer);
 
 	return 0;
 }
 
-void load_free_inode_map(byte buffer[]){
+void load_free_inode_map(byte* buffer){
 	read_blocks(FREE_INODE_MAP_BLOCK_NUM, 1, buffer);
-	freeInodeMap = free_inode_map_from_string(buffer);
+	FIM_from_string(buffer);
 }
 
-void load_free_block_map(byte buffer[]){
+void load_free_block_map(byte* buffer){
 	read_blocks(FREE_BLOCK_MAP_BLOCK_NUM, 1, buffer);
-	freeBlockMap = free_block_map_from_string(buffer);
+	FBM_from_string(buffer);
 }
 
-void load_super_block(byte buffer[]){
+void load_super_block(byte* buffer){
 	read_blocks(SUPER_BLOCK_BLOCK_NUM, 1, buffer);
 	superBlock = super_block_from_string(buffer);
+}
+
+void load_directory(byte* buffer){
+	//TODO
 }
 
 int load_sfs(){
@@ -110,6 +110,7 @@ int load_sfs(){
 	load_super_block(buffer);
 	load_free_block_map(buffer);
 	load_free_inode_map(buffer);
+	load_directory(buffer);
 
 	free(buffer);
 
@@ -130,11 +131,12 @@ int mksfs(int fresh){
 		load_sfs();
 	}
 
-	fileDescriptorTable = create_file_descriptor_table(MAX_OPEN_FILES);
+	FDT_init(MAX_OPEN_FILES);
+	IC_init();
 	return 0;	
 }
 
-/************************************OPEN******************************************/
+/***************************************OPEN***************************************/
 
 //returns the address of the first byte of the specified inode relative to the head of it's block (0 - 511)
 int get_inode_byte_offset(int inodeNum){
@@ -164,7 +166,7 @@ void write_inode_to_disk(int inodeNum){
 
 	//assign inodeByteAddress to point to the correct place on the data block (pointer arithmetic)
 	byte* inodeByteAddress = buffer + get_inode_byte_offset(inodeNum);
-	Inode* inodeToWrite = get_inode_from_cache(inodeCache, inodeNum);
+	Inode* inodeToWrite = IC_get(inodeNum);
 	inode_to_string(inodeToWrite, inodeByteAddress);
 
 	write_blocks(blockNum, 1, buffer);
@@ -183,7 +185,7 @@ Inode* load_inode_from_disk(int inodeNum){
 	byte* inodeStartAddress = buffer + get_inode_byte_offset(inodeNum);
 
 	Inode* loadedInode = inode_from_string(inodeStartAddress);
-	put_inode(inodeCache, inodeNum, loadedInode);
+	IC_put(inodeNum, loadedInode);
 
 	free(buffer);
 	return loadedInode;
@@ -193,7 +195,7 @@ Inode* load_inode_from_disk(int inodeNum){
 void load_file(int inodeNum){
 	//load inode and put it in the inode cache
 	Inode* loadedInode = load_inode_from_disk(inodeNum);
-	put_inode(inodeCache, inodeNum, loadedInode);
+	IC_put(inodeNum, loadedInode);
 }
 
 /*
@@ -201,13 +203,13 @@ void load_file(int inodeNum){
 * Marks the a
 */
 int create_file(char* fileName){
-	int inodeNum = find_free_inode(freeInodeMap);
-	set_inode_used(freeInodeMap, inodeNum);
-	add_file_to_directory(rootDirectory, fileName, inodeNum);
+	int inodeNum = FIM_find_free_inode();
+	FIM_set_inode_used(inodeNum);
+	DIR_add_file(fileName, inodeNum);
 
 	Inode* newInode = load_inode_from_disk(inodeNum);
 	clear_inode(newInode); //make sure to reset any residual values of this inode
-	put_inode(inodeCache, inodeNum, newInode);
+	IC_put(inodeNum, newInode);
 	//TODO write new directory data to disk
 
 	return inodeNum;
@@ -220,7 +222,7 @@ int create_file(char* fileName){
 * @return fileDescriptor associated with the opened file
 */
 int sfs_fopen(char* fileName){
-	int inodeNum = get_inode_number_from_directory(rootDirectory, name);
+	int inodeNum = DIR_get_inode_number(name);
 
 	//if the file does not already exist
 	if(inodeNum == -1){
@@ -231,7 +233,7 @@ int sfs_fopen(char* fileName){
 	//file already exists, load it from disk
 	else{
 
-		fileID = get_file_id(fileDescriptorTable, inodeNum);
+		fileID = FDT_get_file_id(inodeNum);
 		//if file is already open, return it's current fileID
 		if(fileID != -1){
 			return fileID;
@@ -245,18 +247,19 @@ int sfs_fopen(char* fileName){
 
 	//put the inode in the file descriptor table
 	//TODO update the file write/read pointers
-	fileID = put_file_descriptor(fileDescriptorTable, inodeNum);
+	fileID = FDT_put_file_descriptor(inodeNum);
 	return fileID;
 }
 
-/***************************************CLOSE***************************************/
+/***************************************CLOSE**********************************************/
 
 //TODO March 16 - should the specified file be flushed? are there residual changes from previous reads/writes?
 int sfs_fclose(int fileID){
 	//TODO check that the file is already in memory?
-	FileDescriptor* fd = remove_file_descriptor(fileDescriptorTable, fileID);
+	FileDescriptor* fd = FDT_get_file_descriptor(fileID);
 	int inodeNum = fd->inodeNum;
-	remove_inode(inodeCache, inodeNum);
+	FDT_remove_file_descriptor(fileID);
+	IC_remove(inodeNum);
 }
 
 /****************************************WRITE**********************************************/
@@ -365,8 +368,8 @@ int execute_write(const char* buffer, int length, int* dataBlocks, int initialBy
 }
 
 int sfs_fwrite(int fileID, const char* buffer, int length){
-	FileDescriptor* fd = get_file_descriptor(fileDescriptorTable, fileID);
-	Inode* inode = get_inode_from_cache(inodeCache, fd->inodeNum);
+	FileDescriptor* fd = FDT_get_file_descriptor(fileID);
+	Inode* inode = IC_get(fd->inodeNum);
 
 	int dataBlocks[] = (int*)malloc(sizeof(int) * MAX_ALLOCATED_DATA_BLOCKS); //stores the blocks that are allocated to the parameter file
 	int numAllocatedDataBlocks = get_allocated_data_block_numbers(inode, dataBlocks);
@@ -377,8 +380,8 @@ int sfs_fwrite(int fileID, const char* buffer, int length){
 		int i;
 		for(i = 0; i < numNewBlocksToWrite){
 			//TODO is the file system full???
-			int newBlockNum = find_free_block(freeBlockMap);
-			set_block_used(newBlockNum);
+			int newBlockNum = FBM_find_free_block();
+			FBM_set_block_used(newBlockNum);
 			dataBlocks[numAllocatedDataBlocks + i] = newBlockNum;
 		}
 
@@ -396,13 +399,53 @@ int sfs_fwrite(int fileID, const char* buffer, int length){
 
 /***************************************READ************************************************/
 
+void read_entire_block(int blockNum, char* buffer){
+	read_blocks(blockNum, 1, buffer);
+}
+
+void read_partial_block(int blockNum, char* buffer, int byteAddressOffset, int length){
+	byte* readBuffer = (byte*)malloc(sizeof(byte) * BLOCK_SIZE);
+	read_blocks(blockNum, 1, readBuffer);
+
+	int headByteAddress = readBuffer + byteAddressOffset;
+	memcpy(buffer, headByteAddress, length);
+
+	free(buffer);
+}
+
+int execute_read(char* buffer, int length, int* dataBlocks, int initialByteOffset){
+	char* tmpBufferPointer = buffer;
+	int bytesRead = 0, bytesToBeRead, i = 0;
+
+	//read initial partial block
+	bytesToBeRead = min(BLOCK_SIZE - initialByteOffset, length);
+	read_partial_block(*(dataBlocks + i), tmpBufferPointer, initialByteOffset, bytesToBeRead);
+	bytesRead += bytesToBeRead;
+	tmpBufferPointer += bytesToBeRead;
+	i++;
+
+	//write series of entire blocks
+	while(length - bytesRead > BLOCK_SIZE){
+		read_entire_block(*(dataBlocks + i), tmpBufferPointer);
+		bytesRead += BLOCK_SIZE;
+		tmpBufferPointer += BLOCK_SIZE;
+		i++;
+	}
+
+	//write final partial block if necessary
+	int numBytesRemaining = length - bytesRead;
+	if(numBytesRemaining > 0){
+		read_partial_block(*(dataBlocks + i), tmpBufferPointer, 0, numBytesRemaining);
+	}
+}
+
 /*
 * Returns the number of elements successfully read which is less the parameter length 
 * iff a read error or end-of-file is encountered.
 */
 int sfs_fread(int fileID, char* buf, int length){
-	FileDescriptor* fd = get_file_descriptor(fileDescriptorTable, fileID);
-	Inode* inode = get_inode_from_cache(inodeCache, fd->inodeNum);
+	FileDescriptor* fd = FDT_get_file_descriptor(fileID);
+	Inode* inode = IC_get(fd->inodeNum);
 
 	//if an EOF read is requested
 	if(fd->readPtr + length > inode->size) {
@@ -418,6 +461,7 @@ int sfs_fread(int fileID, char* buf, int length){
 }
 
 /****************************************SEEK***********************************************/
+
 void update_write_pointer(FileDescriptor* fd, int offset){
 	fd->writePtr += offset;
 }
@@ -427,7 +471,7 @@ void update_read_pointer(FileDescriptor* fd, int offset){
 }
 
 int sfs_fseek(int fileID, int offset){
-	FileDescriptor* fd = get_file_descriptor(fileDescriptorTable, fileID);
+	FileDescriptor* fd = FDT_get_file_descriptor(fileID);
 	update_read_pointer(fd, offset);
 	update_write_pointer(fd, offset);
 }
@@ -441,7 +485,7 @@ void clear_data_blocks(Inode* i){
 
 	int i;
 	for(i = 0; i < numAllocatedDataBlocks; i++){
-		clear_block(freeBlockMap, dataBlocks[i]);
+		FBM_clear_block(dataBlocks[i]);
 	}
 
 	free(dataBlocks);
@@ -452,25 +496,25 @@ void clear_data_blocks(Inode* i){
 */
 int sfs_remove(char* fileName){
 	//Remove file entry from directory
-	int inodeNum = get_inode_number_from_directory(rootDirectory, fileName);
-	remove_file_from_directory(rootDirectory, fileName);
+	int inodeNum = DIR_get_inode_number(fileName);
+	DIR_remove_file(fileName);
 
 	//remove inode from cache
 	Inode* targetInode;
-	if(contains_inode(inodeCache, inodeNum)){
-		targetInode = get_inode(inodeCache, inodeNum);
-		remove_inode(inodeCache, inodeNum);
+	if(IC_contains(inodeNum)){
+		targetInode = IC_get(inodeNum);
+		IC_remove(inodeNum);
 	}
 	else{
 		targetInode = load_inode_from_disk(inodeNum);
 	}
 
 	//if the file is currently open, remove it from the fileDescriptorTable
-	if(contains_file_id(fileDescriptorTable, inodeNum)){
+	if(FDT_contains_file_id(inodeNum)){
 
 		//TODO please fix this awful two call system
-		int fileID = get_file_id(fileDescriptorTable, inodeNum);
-		remove_file_descriptor(fileDescriptorTable, fileID);
+		int fileID = FDT_get_file_id(inodeNum);
+		FDT_remove_file_descriptor(fileID);
 	}
 
 	//clear blocks allocated to the removed file's inode
@@ -480,16 +524,16 @@ int sfs_remove(char* fileName){
 /*************************************GET_NEXT********************************************/
 
 int sfs_get_next_filename(char* filename){
-	int nextFileInodeNum = get_next_inode_number(rootDirectory);
+	int nextFileInodeNum = DIR_get_next_inode_number();
 }
 
 int sfs_get_file_size(const char* path){
 	//TODO the form of path might be incompatible IE it might need to be parsed
-	int targetInodeNum = get_inode_number_from_directory(rootDirectory, path);
+	int targetInodeNum = DIR_get_inode_number(path);
 
 	//if the file's inode already exists in the memory cache
-	if(contains_inode(inodeCache, inodeNum)){
-		Inode* targetInode = get_inode(inodeCache, inodeNum);
+	if(IC_contains(inodeNum)){
+		Inode* targetInode = IC_get(inodeNum);
 		return targetInode->size;
 	}
 
@@ -501,5 +545,5 @@ int sfs_get_file_size(const char* path){
 	}
 }
 
-
 /****************************************EOF**********************************************/
+/*****************************************************************************************/

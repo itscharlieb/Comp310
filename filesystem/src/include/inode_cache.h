@@ -4,15 +4,14 @@
 */
 
 #include <stdbool.h>
-#include "inode.h"
 
 typedef struct {
-	//TODO
+	Inode inodes[MAX_OPEN_FILES];
 } InodeCache;
 
-InodeCache* create_inode_cache();
+void IC_init();
 
-void put_inode(InodeCache* ic, int inodeNum, Inode* i);
-bool contains_inode(InodeCache* ic, int inodeNum);
-Inode* get_inode(InodeCache* ic, int inodeNum);
-Inode* remove_inode(InodeCache* ic, int inodeNum);
+void IC_put(int inodeNum, Inode* i);
+bool IC_contains(int inodeNum);
+Inode* IC_get(int inodeNum);
+void IC_remove(int inodeNum);

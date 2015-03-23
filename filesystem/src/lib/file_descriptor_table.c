@@ -1,0 +1,47 @@
+/**
+* @author Charlie Bloomfield
+* March 15, 2015
+*/
+
+#include "types.h"
+#include "file_descriptor_table.h"
+
+static FileDescriptorTable* fdt;
+
+/*
+For simplicity, the FDT is currently an array of 100 FileDescriptors. 
+Each index in the array holds the inode with the same number (there are only 100 inodes in this file system).
+If a file associated with inode 42 is open, the index 42 in the fdt will hold it's FileDescriptor.
+*/
+
+void FDT_init(int size){
+	fdt = (FileDescriptorTable*)malloc(sizeof(FileDescriptorTable));
+	fdt->fileDescriptors = (FileDescriptor*)malloc(sizeof(FileDescriptor) * size);
+}
+
+//returns -1 if the specified inodeNum does not exist in the inode table    
+int FDT_get_file_id(int inodeNum){
+	return inodeNum;
+}
+
+int FDT_contains_file_id(int inodeNum){
+	return *(fdt->fileDescriptors + inodeNum) != NULL;
+}
+
+//puts the inodeNum in the table AND returns the associated file descriptor
+int FDT_put_file_descriptor(int inodeNum);{
+	FileDescriptor* fd = *(fdt->fileDescriptors + inodeNum);
+	fd = (FileDescriptor*)malloc(sizeof(FileDescriptor));
+	fd->readPtr = 0;
+	fd->writePtr = 0;
+	fd->inodeNum = inodeNum;
+	return inodeNum; 
+}
+
+FileDescriptor* FDT_get_file_descriptor(int fileID){
+	return *(fdt->fileDescriptors + fileID);
+}
+
+void FDT_remove_file_descriptor(int fileID){
+	free(*(fdt->fileDescriptors + fileID));
+}

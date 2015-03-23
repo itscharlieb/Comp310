@@ -19,7 +19,7 @@ typedef struct {
 	byte inodeTableLength;
 } SuperBlock;
 
-SuperBlock* create_super_block();
+SuperBlock* init_super_block();
 
 //used to write and read the super block from disk
 void super_block_to_string(SuperBlock* sb, byte* buffer);

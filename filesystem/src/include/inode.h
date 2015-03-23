@@ -17,7 +17,7 @@ typedef struct {
 	half_word indirect;
 } Inode;
 
-Inode* create_inode();
+Inode* init_inode();
 
 //returns the number of data blocks allocated to Inode i
 int get_allocated_data_blocks(Inode* i, int blocks[]);
