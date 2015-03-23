@@ -11,6 +11,8 @@
 #include "types.h"
 #include "super_block.h"
 
+#define MAX_FILE_NAME_LENGTH 16
+#define MAX_FILE_EXTENSION_LENGTH 3
 #define MAX_OPEN_FILES 10
 
 //constant block numbers
@@ -196,10 +198,7 @@ void load_file(int inodeNum){
 	put_inode(inodeCache, inodeNum, loadedInode);
 }
 
-/*
-* Returns the inode number of the newly created file. Stores the inode in the inodeCache
-* Marks the a
-*/
+//returns the inode number of the newly created file. Stores the inode in the inodeCache
 int create_file(char* fileName){
 	int inodeNum = find_free_inode(freeInodeMap);
 	set_inode_used(freeInodeMap, inodeNum);
@@ -230,7 +229,7 @@ int sfs_fopen(char* fileName){
 	int fileID;
 	//file already exists, load it from disk
 	else{
-
+		
 		fileID = get_file_id(fileDescriptorTable, inodeNum);
 		//if file is already open, return it's current fileID
 		if(fileID != -1){
@@ -283,75 +282,18 @@ int sfs_fseek(int fileID, int offset){
 }
 
 /*******************************************************************************************/
-
-//returns the number of indirect_pointer pointers allocated to the parameter inode
-int get_number_indirect_pointers(Inode* i){
-	int directOverflowSize = MAX_NUM_DIRECT_POINTERS * BLOCK_SIZE;
-	if(i->size < directOverflowSize){
-		return 0;
-	}
-
-	/*
-	* TODO please explain this later
-	*/
-	return 1 + ((i->size - directOverflowSize) / BLOCK_SIZE);
-}
-
-//loads the indirect_pointer data block allocated to the parameter inode
-void load_indirect_data_block(Inode* i, byte* buffer){
-	read_blocks(i->indirect_pointer, 1, buffer);
-}
-
-//returns the number of data blocks allocated to Inode i, stores the inode numbers in the paramter dataBlocks array
-//TODO refactor - no functions over 10 lines
-int get_allocated_data_block_numbers(Inode* i, int* dataBlocks){
-	byte* buffer;
-	int k;
-
-	if(i->size > BLOCK_SIZE * MAX_NUM_DIRECT_POINTERS){
-		//copy direct pointers into dataBlocks array
-		for(k = 0; i < MAX_NUM_DIRECT_POINTERS; k++){
-			*(dataBlocks + k) = i->directPointers[k];
-		}
-
-		buffer = (byte*)malloc(sizeof(BLOCK_SIZE));
-		load_indirect_pointer_data_block(i, buffer);
-		int totalNumPointers = MAX_NUM_DIRECT_POINTERS + get_number_indirect_pointers(i);
-
-		while(k < totalNumPointers{
-			//TODO read from buffer
-		}
-
-		free(buffer);
-		return totalNumPointers;
-	}
-
-	else{
-		int numDirectPointers = i->size % BLOCK_SIZE;
-		for(k = 0; k < numDirectPointers; k++){
-			*(dataBlocks + k) = i->directPointers[k];
-		}
-		return numDirectPointers;
-	}
-}
-
-//clears all of the data blocks allocated to the parameter inode from the free data block map
 void clear_data_blocks(Inode* i){
 	int dataBlocks[] = (int*) malloc(sizeof(int*) * MAX_ALLOCATED_DATA_BLOCKS);
-	int numAllocatedDataBlocks = get_allocated_data_block_numbers(inode, dataBlocks);
+	int numAllocatedDataBlocks = get_allocated_data_blocks(inode, dataBlocks);
 
 	int i;
 	for(i = 0; i < numAllocatedDataBlocks; i++){
-		clear_block(freeBlockMap, dataBlocks[i]);
+		free_block(freeBlockMap, dataBlocks[i]);
 	}
 
 	free(dataBlocks);
 }
 
-/*
-*
-*
-*/
 int sfs_remove(char* fileName){
 	int inodeNum = get_inode_number_from_directory(rootDirectory, fileName);
 	remove_file_from_directory(rootDirectory, fileName);
@@ -379,7 +321,7 @@ int sfs_remove(char* fileName){
 /*****************************************************************************************/
 
 int sfs_get_next_filename(char* filename){
-	int nextFileInodeNum = get_next_inode_number(rootDirectory);
+	int nextFileID = get_next_file_id(rootDirectory);
 }
 
 int sfs_get_file_size(const char* path){
