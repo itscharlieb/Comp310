@@ -5,9 +5,10 @@
 
 #include "types.h"
 
+//the write read pointers are not absolute addresses - they are relative to the size of the file
 typedef struct {
 	int readPtr;
-	int writePtr;
+	int writePtr; 
 	int inodeNum; 
 } FileDescriptor;
 
