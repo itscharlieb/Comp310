@@ -3,11 +3,12 @@
 * March 15, 2015
 */
 
-#include "bitmap.h"
 #include "types.h"
+#include "bitmap.h"
 
 typedef struct {
 	Bitmap* freeBlockBitmap;
+	unsigned int size; //size in number of elements (byte size is 1/8)
 } FreeBlockMap;
 
 void FBM_init(int numBlocks);

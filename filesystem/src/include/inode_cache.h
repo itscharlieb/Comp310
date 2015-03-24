@@ -3,10 +3,11 @@
 * March 15, 2015
 */
 
+#include "constants.h"
 #include <stdbool.h>
 
 typedef struct {
-	Inode inodes[MAX_OPEN_FILES];
+	Inode inodes[MAX_NUM_FILES];
 } InodeCache;
 
 void IC_init();

@@ -3,10 +3,6 @@
 * March 16, 2015
 */
 
-#define BYTE_SIZE 1
-#define HALF_WORD_SIZE 2
-#define MEM_WORD_SIZE 4
-
 /* This file defines data types useful data transfer to and from disk */
 
 //1 byte

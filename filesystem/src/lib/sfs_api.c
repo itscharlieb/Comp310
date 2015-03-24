@@ -11,16 +11,12 @@
 #include "types.h"
 #include "super_block.h"
 #include "util.h"
+#include "constants.h"
 
-#define MAX_OPEN_FILES 100
-
-//constant block numbers
-#define SUPER_BLOCK_BLOCK_NUM 0
-#define FREE_INODE_MAP_BLOCK_NUM 4094
-#define FREE_BLOCK_MAP_BLOCK_NUM 4095
+#include <string.h>
+#include <stdio.h>
 
 const char fileName[] = "itscharlieb FS";
-
 
 /***********************************INIT**************************************/
 
@@ -48,12 +44,12 @@ void init_free_block_map(byte* buffer){
 	write_blocks(FREE_BLOCK_MAP_BLOCK_NUM, 1, buffer);
 }
 
-int init_super_block(byte* buffer){
-	//init super block, write it to disk
-	superBlock = create_super_block();
-	super_block_to_string(superBlock, buffer);
-	write_blocks(SUPER_BLOCK_BLOCK_NUM, 1, buffer);
-}
+// int init_super_block(byte* buffer){
+// 	init super block, write it to disk
+// 	superBlock = create_super_block();
+// 	super_block_to_string(superBlock, buffer);
+// 	write_blocks(SUPER_BLOCK_BLOCK_NUM, 1, buffer);
+// }
 
 int init_directory(byte* buffer){
 	//TODO
@@ -69,7 +65,7 @@ int init_sfs(){
 	//buffer can be reused to initialize superblock/mappings
 	byte* buffer = (byte*) malloc(sizeof(byte) * BLOCK_SIZE);
 
-	init_super_block(buffer);
+	//init_super_block(buffer);
 	init_free_block_map(buffer);
 	init_free_inode_map(buffer);
 	init_directory(buffer);
@@ -89,10 +85,10 @@ void load_free_block_map(byte* buffer){
 	FBM_from_string(buffer);
 }
 
-void load_super_block(byte* buffer){
-	read_blocks(SUPER_BLOCK_BLOCK_NUM, 1, buffer);
-	superBlock = super_block_from_string(buffer);
-}
+// void load_super_block(byte* buffer){
+// 	read_blocks(SUPER_BLOCK_BLOCK_NUM, 1, buffer);
+// 	superBlock = super_block_from_string(buffer);
+// }
 
 void load_directory(byte* buffer){
 	//TODO
@@ -107,7 +103,7 @@ int load_sfs(){
 
 	byte* buffer = (byte*) malloc(sizeof(byte) * BLOCK_SIZE);
 
-	load_super_block(buffer);
+	//load_super_block(buffer);
 	load_free_block_map(buffer);
 	load_free_inode_map(buffer);
 	load_directory(buffer);
@@ -131,7 +127,7 @@ int mksfs(int fresh){
 		load_sfs();
 	}
 
-	FDT_init(MAX_OPEN_FILES);
+	FDT_init(MAX_NUM_FILES);
 	IC_init();
 	return 0;	
 }
@@ -154,6 +150,15 @@ int get_inode_byte_offset(int inodeNum){
 int get_inode_block_number(int inodeNum){
 	//offset by one to account for the super block being in 
 	return 1 + inodeNum % INODES_PER_BLOCK;
+}
+
+//does what is says
+void write_inode_indirect_block_to_disk(Inode* inode, half_word* indirectDataBlocks, int numIndirectDataBlocks){
+	byte* buffer = (byte*)malloc(sizeof(byte) * BLOCK_SIZE);
+	int indirectBlockNum = inode->indirect;
+	memcpy(buffer, indirectDataBlocks, (numIndirectDataBlocks * HALF_WORD_SIZE));
+	write_blocks(indirectBlockNum, 1, buffer);
+	free(buffer);
 }
 
 /*
@@ -230,7 +235,7 @@ int sfs_fopen(char* fileName){
 	}
 
 	int fileID;
-	//file already exists, load it from disk
+	//file already exists
 	else{
 
 		fileID = FDT_get_file_id(inodeNum);
@@ -283,8 +288,7 @@ void load_indirect_data_block(Inode* i, byte* buffer){
 }
 
 //returns the number of data blocks allocated to Inode i, stores the inode numbers in the paramter dataBlocks array - maintains ordering (for fread)
-//TODO refactor - no functions over 10 lines
-int get_allocated_data_block_numbers(Inode* i, int* dataBlocks){
+int get_allocated_data_block_numbers(Inode* i, half_word* dataBlocks){
 	byte* buffer;
 	int k;
 
@@ -300,7 +304,7 @@ int get_allocated_data_block_numbers(Inode* i, int* dataBlocks){
 		int totalNumPointers = MAX_NUM_DIRECT_POINTERS + get_number_indirect_pointers(i);
 
 		while(k < totalNumPointers{
-			//TODO read data blocks from buffer
+			half_word 
 		}
 
 		free(buffer);
@@ -341,7 +345,7 @@ int get_number_new_blocks_to_write(FileDescriptor* fd, int length, int numAlloca
 }
 
 //executes a file write
-int execute_write(const char* buffer, int length, int* dataBlocks, int initialByteOffset){
+int execute_write(const char* buffer, int length, half_word* dataBlocks, int initialByteOffset){
 	char* tmpBufferPointer = buffer;
 	int bytesWritten = 0, bytesToBeWritten, i = 0;
 
@@ -371,7 +375,7 @@ int sfs_fwrite(int fileID, const char* buffer, int length){
 	FileDescriptor* fd = FDT_get_file_descriptor(fileID);
 	Inode* inode = IC_get(fd->inodeNum);
 
-	int dataBlocks[] = (int*)malloc(sizeof(int) * MAX_ALLOCATED_DATA_BLOCKS); //stores the blocks that are allocated to the parameter file
+	half_word dataBlocks[] = (half_word*)malloc(sizeof(half_word) * MAX_ALLOCATED_DATA_BLOCKS); //stores the blocks that are allocated to the parameter file
 	int numAllocatedDataBlocks = get_allocated_data_block_numbers(inode, dataBlocks);
 
 	//if the write will overflow onto a new block,, allocate new blocks
@@ -382,18 +386,14 @@ int sfs_fwrite(int fileID, const char* buffer, int length){
 			//TODO is the file system full???
 			int newBlockNum = FBM_find_free_block();
 			FBM_set_block_used(newBlockNum);
-			dataBlocks[numAllocatedDataBlocks + i] = newBlockNum;
+			dataBlocks[numAllocatedDataBlocks + i] = (half_word)newBlockNum;
 		}
 
-		//TODO update Inode state to reflect the new blocks
 	}
 
-	int errVal = execute_write(...)
-
-	//TODO update file size
+	int errVal = execute_write(...);
 
 	free(dataBlocks);
-
 	return errVal;
 }
 
@@ -413,7 +413,7 @@ void read_partial_block(int blockNum, char* buffer, int byteAddressOffset, int l
 	free(buffer);
 }
 
-int execute_read(char* buffer, int length, int* dataBlocks, int initialByteOffset){
+int execute_read(char* buffer, int length, half_word* dataBlocks, int initialByteOffset){
 	char* tmpBufferPointer = buffer;
 	int bytesRead = 0, bytesToBeRead, i = 0;
 
@@ -454,7 +454,7 @@ int sfs_fread(int fileID, char* buf, int length){
 	}
 
 	//get the data blocks associated with 
-	int dataBlocks[] = (int*) malloc(sizeof(int*) * MAX_ALLOCATED_DATA_BLOCKS);
+	half_word dataBlocks[] = (half_word*)malloc(sizeof(half_word) * MAX_ALLOCATED_DATA_BLOCKS);
 	int numAllocatedDataBlocks = get_allocated_data_block_numbers(inode, dataBlocks);
 
 	return length;
@@ -480,7 +480,7 @@ int sfs_fseek(int fileID, int offset){
 
 //clears all of the data blocks allocated to the parameter inode from the free data block map
 void clear_data_blocks(Inode* i){
-	int dataBlocks[] = (int*) malloc(sizeof(int*) * MAX_ALLOCATED_DATA_BLOCKS);
+	half_word dataBlocks[] = (half_word*) malloc(sizeof(half_word) * MAX_ALLOCATED_DATA_BLOCKS);
 	int numAllocatedDataBlocks = get_allocated_data_block_numbers(inode, dataBlocks);
 
 	int i;
@@ -545,5 +545,5 @@ int sfs_get_file_size(const char* path){
 	}
 }
 
-/****************************************EOF**********************************************/
+/******************************************EOF********************************************/
 /*****************************************************************************************/

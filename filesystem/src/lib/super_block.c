@@ -5,23 +5,16 @@
 
 #include "super_block.h"
 
-SuperBlock* create_super_block(){
-}
 
 //used to write and read the super block from disk
 void super_block_to_string(SuperBlock* sb, byte* buffer){
-	write_half_word_as_bytes(sb->magic, buffer);
+	write_half_word_as_bytes(MAGIC, buffer);
 	buffer += HALF_WORD_SIZE;
-	write_half_word_as_bytes(sb->blockSize, buffer);
+	write_half_word_as_bytes(BLOCK_SIZE, buffer);
 	buffer += HALF_WORD_SIZE;
-	write_half_word_as_bytes(sb->numBlocks, buffer);
+	write_half_word_as_bytes(NUM_BLOCKS, buffer);
 	buffer += HALF_WORD_SIZE;
-	write_half_word_as_bytes(sb->rootDirectoryBlockNum, buffer);
+	write_half_word_as_bytes(ROOT_DIRECTORY_INODE_NUMBER, buffer);
 	buffer += HALF_WORD_SIZE;
-	write_mem_word_as_bytes(sb->inodeTableLength, buffer);
-}
-
-//used to 
-SuperBlock* super_block_from_string(byte* buffer){
-	SuperBlock* sb = malloc(sizeof(SuperBlock));
+	write_mem_word_as_bytes(INODE_TABLE_LENGTH, buffer);
 }
