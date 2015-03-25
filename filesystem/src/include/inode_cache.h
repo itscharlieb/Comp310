@@ -4,10 +4,11 @@
 */
 
 #include "constants.h"
+#include "inode.h"
 #include <stdbool.h>
 
 typedef struct {
-	Inode inodes[MAX_NUM_FILES];
+	Inode* inodes[MAX_NUM_FILES];
 } InodeCache;
 
 void IC_init();

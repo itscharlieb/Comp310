@@ -44,7 +44,7 @@ static int fuse_readdir(const char *path, void *buf, fuse_fill_dir_t filler,
     filler(buf, ".", NULL, 0);
     filler(buf, "..", NULL, 0);
     
-    while(sfs_get_next_filename(file_name)) {
+    while(sfs_get_next_file_name(file_name)) {
         filler(buf, &file_name[1], NULL, 0);
     }
     

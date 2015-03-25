@@ -3,42 +3,51 @@
 * March 14, 2015
 **/
 
-#include "sfs_api.h"
-#include "disk_emu.h"
-#include "bitmap.h"
-#include "inode.h"
-#include "directory.h"
-#include "types.h"
-#include "super_block.h"
-#include "util.h"
-#include "constants.h"
+/************ VENDOR *************/
+#include "../include/disk_emu.h"
+
+/************* LIB ***************/
+#include "../include/sfs_api.h"
+
+#include "../include/constants.h"
+#include "../include/inode.h"
+#include "../include/inode_cache.h"
+#include "../include/directory.h"
+#include "../include/file_descriptor_table.h"
+#include "../include/free_block_map.h"
+#include "../include/free_inode_map.h"
+#include "../include/super_block.h"
+#include "../include/util.h"
+#include "../include/types.h"
 
 #include <string.h>
 #include <stdio.h>
+#include <stdlib.h>
 
-const char fileName[] = "itscharlieb FS";
+char diskName[] = "itscharlieb FS";
 
 /***********************************INIT**************************************/
 
 void init_free_inode_map(byte* buffer){
-	FIM_init();
-	FIM_set_inode_used(ROOT_DIRECTORY_INODE_NUMBER);
-	FIM_to_string(buffer)
+	int numInodes = MAX_NUM_FILES;
+	FIM_init(numInodes);
+	FIM_set_inode_used(ROOT_DIRECTORY_INODE_NUM);
+	FIM_to_string(buffer);
 	write_blocks(FREE_INODE_MAP_BLOCK_NUM, 1, buffer);
 }
 
 void init_free_block_map(byte* buffer){
-	FBM_init();
+	FBM_init(NUM_BLOCKS);
 	FBM_set_block_used(SUPER_BLOCK_BLOCK_NUM);
 
 	int i;
-	// blocks 1-128 hold inodes, not to be used for data
-	for(int i = 1; i < 129; i++){
+	// blocks 1-13 hold inodes, not to be used for data
+	for(i = 1; i <= INODE_TABLE_LENGTH; i++){
 		FBM_set_block_used(i);
 	}
 
-	FBM_set_block_used(FREE_BLOCK_MAP_BLOCK_NUM);
-	FBM_set_block_used(FREE_INODE_MAP_BLOCK_NUM);
+	FBM_set_block_used(FREE_BLOCK_MAP_BLOCK_NUM);//4094
+	FBM_set_block_used(FREE_INODE_MAP_BLOCK_NUM);//4095
 
 	FBM_to_string(buffer);
 	write_blocks(FREE_BLOCK_MAP_BLOCK_NUM, 1, buffer);
@@ -57,7 +66,7 @@ int init_directory(byte* buffer){
 
 int init_sfs(){
 	//if unsuccessful load of the emulation disk
-	if(init_fresh_disk(fileName, BLOCK_SIZE, NUM_DISK_BLOCKS) == -1){
+	if(init_fresh_disk(diskName, BLOCK_SIZE, NUM_BLOCKS) == -1){
 		printf("Failed to initialize the file system");
 		return -1;
 	}
@@ -65,7 +74,7 @@ int init_sfs(){
 	//buffer can be reused to initialize superblock/mappings
 	byte* buffer = (byte*) malloc(sizeof(byte) * BLOCK_SIZE);
 
-	//init_super_block(buffer);
+	//init_super_block(buffer); just constants
 	init_free_block_map(buffer);
 	init_free_inode_map(buffer);
 	init_directory(buffer);
@@ -77,12 +86,13 @@ int init_sfs(){
 
 void load_free_inode_map(byte* buffer){
 	read_blocks(FREE_INODE_MAP_BLOCK_NUM, 1, buffer);
-	FIM_from_string(buffer);
+	int numInodes = MAX_NUM_FILES;
+	FIM_from_string(buffer, numInodes);
 }
 
 void load_free_block_map(byte* buffer){
 	read_blocks(FREE_BLOCK_MAP_BLOCK_NUM, 1, buffer);
-	FBM_from_string(buffer);
+	FBM_from_string(buffer, NUM_BLOCKS);
 }
 
 // void load_super_block(byte* buffer){
@@ -96,7 +106,7 @@ void load_directory(byte* buffer){
 
 int load_sfs(){
 	//if unsuccessful creation of the emulation disk
-	if(init_disk(fileName, BLOCK_SIZE, NUM_DISK_BLOCKS) == -1){
+	if(init_disk(diskName, BLOCK_SIZE, NUM_BLOCKS) == -1){
 		printf("Failed to initialize the file system");
 		return -1;
 	}
@@ -227,14 +237,14 @@ int create_file(char* fileName){
 * @return fileDescriptor associated with the opened file
 */
 int sfs_fopen(char* fileName){
-	int inodeNum = DIR_get_inode_number(name);
+	int inodeNum = DIR_get_inode_number(fileName);
+	int fileID;
 
 	//if the file does not already exist
 	if(inodeNum == -1){
 		inodeNum = create_file(fileName);
 	}
 
-	int fileID;
 	//file already exists
 	else{
 
@@ -270,9 +280,9 @@ int sfs_fclose(int fileID){
 /****************************************WRITE**********************************************/
 
 //returns the number of indirect_pointer pointers allocated to the parameter inode
-int get_number_indirect_pointers(Inode* i){
+int get_number_indirect_pointers(Inode* inode){
 	int directOverflowSize = MAX_NUM_DIRECT_POINTERS * BLOCK_SIZE;
-	if(i->size < directOverflowSize){
+	if(inode->size < directOverflowSize){
 		return 0;
 	}
 
@@ -283,39 +293,39 @@ int get_number_indirect_pointers(Inode* i){
 }
 
 //loads the indirect_pointer data block allocated to the parameter inode
-void load_indirect_data_block(Inode* i, byte* buffer){
-	read_blocks(i->indirect_pointer, 1, buffer);
+void load_indirect_data_block(Inode* inode, byte* buffer){
+	read_blocks(inode->indirect, 1, buffer);
 }
 
 //returns the number of data blocks allocated to Inode i, stores the inode numbers in the paramter dataBlocks array - maintains ordering (for fread)
-int get_allocated_data_block_numbers(Inode* i, half_word* dataBlocks){
+int get_allocated_data_block_numbers(Inode* inode, half_word* dataBlocks){
 	byte* buffer;
 	int k;
 
 	//the parameter inode has both direct and indirect blocks
-	if(i->size > BLOCK_SIZE * MAX_NUM_DIRECT_POINTERS){
+	if(inode->size > BLOCK_SIZE * MAX_NUM_DIRECT_POINTERS){
+		int numDirectPointers = MAX_NUM_DIRECT_POINTERS;
+		int numIndirectPointers = get_number_indirect_pointers(inode);
+
 		//copy direct pointers into dataBlocks array
-		for(k = 0; i < MAX_NUM_DIRECT_POINTERS; k++){
-			*(dataBlocks + k) = i->directPointers[k];
+		for(k = 0; k < numDirectPointers; k++){
+			*(dataBlocks + k) = inode->directPointers[k];
 		}
 
 		buffer = (byte*)malloc(sizeof(BLOCK_SIZE));
-		load_indirect_data_block(i, buffer);
-		int totalNumPointers = MAX_NUM_DIRECT_POINTERS + get_number_indirect_pointers(i);
+		load_indirect_data_block(inode, buffer);
 
-		while(k < totalNumPointers{
-			half_word 
-		}
-
+		//copy the pointers from the indirect block into the tail of the dataBlock array
+		memcpy((dataBlocks + MAX_NUM_DIRECT_POINTERS), buffer, (numIndirectPointers * HALF_WORD_SIZE));
 		free(buffer);
-		return totalNumPointers;
+		return numDirectPointers + numIndirectPointers;
 	}
 
 	//there are only direct pointers allocated to the parameter inode
 	else{
-		int numDirectPointers = i->size % BLOCK_SIZE;
+		int numDirectPointers = inode->size % BLOCK_SIZE;
 		for(k = 0; k < numDirectPointers; k++){
-			*(dataBlocks + k) = i->directPointers[k];
+			*(dataBlocks + k) = inode->directPointers[k];
 		}
 		return numDirectPointers;
 	}
@@ -330,13 +340,13 @@ void write_entire_block(int blockNum, byte* buffer){
 //and writes the modified block back to disk
 void write_partial_block(int blockNum, const char* buffer, int byteAddressOffset, int length){
 	byte* blockBuffer = (byte*)malloc(sizeof(byte) * BLOCK_SIZE);
-	read_blocks(blockNum, 1, blockbBuffer);
+	read_blocks(blockNum, 1, blockBuffer);
 
 	byte* headByteAddress = blockBuffer + byteAddressOffset;
 	memcpy(headByteAddress, buffer, length);
 
 	write_blocks(blockNum, 1, blockBuffer);
-	free(buffer);
+	free(blockBuffer);
 }
 
 //returns the number of new data blocks necesarry to perform a given write (assumed that this is only used if new blocks are needed)
@@ -369,30 +379,30 @@ int execute_write(const char* buffer, int length, half_word* dataBlocks, int ini
 	if(numBytesRemaining > 0){
 		write_partial_block(*(dataBlocks + i), tmpBufferPointer, 0, numBytesRemaining);
 	}
+
+	return 0;
 }
 
 int sfs_fwrite(int fileID, const char* buffer, int length){
 	FileDescriptor* fd = FDT_get_file_descriptor(fileID);
 	Inode* inode = IC_get(fd->inodeNum);
 
-	half_word dataBlocks[] = (half_word*)malloc(sizeof(half_word) * MAX_ALLOCATED_DATA_BLOCKS); //stores the blocks that are allocated to the parameter file
+	half_word* dataBlocks = (half_word*)malloc(sizeof(half_word) * MAX_ALLOCATED_DATA_BLOCKS); //stores the blocks that are allocated to the parameter file
 	int numAllocatedDataBlocks = get_allocated_data_block_numbers(inode, dataBlocks);
 
 	//if the write will overflow onto a new block,, allocate new blocks
 	if(fd->writePtr + length > numAllocatedDataBlocks * BLOCK_SIZE){
 		int numNewBlocksToWrite = get_number_new_blocks_to_write(fd, length, numAllocatedDataBlocks);
 		int i;
-		for(i = 0; i < numNewBlocksToWrite){
+		for(i = 0; i < numNewBlocksToWrite; i++){
 			//TODO is the file system full???
 			int newBlockNum = FBM_find_free_block();
 			FBM_set_block_used(newBlockNum);
-			dataBlocks[numAllocatedDataBlocks + i] = (half_word)newBlockNum;
+			*(dataBlocks + numAllocatedDataBlocks + i) = (half_word)newBlockNum;
 		}
-
 	}
 
-	int errVal = execute_write(...);
-
+	int errVal = execute_write(buffer, length, dataBlocks, fd->writePtr % BLOCK_SIZE);
 	free(dataBlocks);
 	return errVal;
 }
@@ -407,7 +417,7 @@ void read_partial_block(int blockNum, char* buffer, int byteAddressOffset, int l
 	byte* readBuffer = (byte*)malloc(sizeof(byte) * BLOCK_SIZE);
 	read_blocks(blockNum, 1, readBuffer);
 
-	int headByteAddress = readBuffer + byteAddressOffset;
+	byte* headByteAddress = readBuffer + byteAddressOffset;
 	memcpy(buffer, headByteAddress, length);
 
 	free(buffer);
@@ -454,7 +464,7 @@ int sfs_fread(int fileID, char* buf, int length){
 	}
 
 	//get the data blocks associated with 
-	half_word dataBlocks[] = (half_word*)malloc(sizeof(half_word) * MAX_ALLOCATED_DATA_BLOCKS);
+	half_word* dataBlocks = (half_word*)malloc(sizeof(half_word) * MAX_ALLOCATED_DATA_BLOCKS);
 	int numAllocatedDataBlocks = get_allocated_data_block_numbers(inode, dataBlocks);
 
 	return length;
@@ -479,13 +489,13 @@ int sfs_fseek(int fileID, int offset){
 /****************************************REMOVE*********************************************/
 
 //clears all of the data blocks allocated to the parameter inode from the free data block map
-void clear_data_blocks(Inode* i){
-	half_word dataBlocks[] = (half_word*) malloc(sizeof(half_word) * MAX_ALLOCATED_DATA_BLOCKS);
+void clear_data_blocks(Inode* inode){
+	half_word* dataBlocks = (half_word*) malloc(sizeof(half_word) * MAX_ALLOCATED_DATA_BLOCKS);
 	int numAllocatedDataBlocks = get_allocated_data_block_numbers(inode, dataBlocks);
 
 	int i;
 	for(i = 0; i < numAllocatedDataBlocks; i++){
-		FBM_clear_block(dataBlocks[i]);
+		FBM_clear_block(*(dataBlocks + i));
 	}
 
 	free(dataBlocks);
@@ -523,13 +533,13 @@ int sfs_remove(char* fileName){
 
 /*************************************GET_NEXT********************************************/
 
-int sfs_get_next_filename(char* filename){
-	int nextFileInodeNum = DIR_get_next_inode_number();
+int sfs_get_next_filename(char* fileNameBuffer){
+	return DIR_get_next_file_name(fileNameBuffer);
 }
 
 int sfs_get_file_size(const char* path){
 	//TODO the form of path might be incompatible IE it might need to be parsed
-	int targetInodeNum = DIR_get_inode_number(path);
+	int inodeNum = DIR_get_inode_number(path);
 
 	//if the file's inode already exists in the memory cache
 	if(IC_contains(inodeNum)){
@@ -541,6 +551,7 @@ int sfs_get_file_size(const char* path){
 	else{
 		//TODO maybe store the inode in memory?
 		Inode* targetInode = load_inode_from_disk(inodeNum);
+		IC_put(inodeNum, targetInode);
 		return targetInode->size;
 	}
 }

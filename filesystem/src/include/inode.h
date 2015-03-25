@@ -11,15 +11,13 @@
 typedef struct {
 	mem_word size; //max file size is approx 2^19 bytes
 	half_word mode, linkCount, uid, gid;
-	half_word directPointers[NUM_DIRECT_POINTERS];
+	half_word directPointers[MAX_NUM_DIRECT_POINTERS]; //12
 	half_word indirect;
 } Inode;
 
 Inode* init_inode();
 
-//returns the number of data blocks allocated to Inode i
-int get_allocated_data_blocks(Inode* i, int blocks[]);
-void clear_inode(Inode* i);
+void clear_inode(Inode* inode);
 
 //these are used to write/read Inodes to/from disk 
 void inode_to_string(Inode* i, byte* buffer);

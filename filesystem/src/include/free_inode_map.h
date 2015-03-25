@@ -18,4 +18,4 @@ void FIM_set_inode_used(int inodeNum);
 void FIM_clear_inode(int inodeNum);
 
 void FIM_to_string(byte* buffer);
-void FIM_from_string(byte* buffer);
+void FIM_from_string(byte* buffer, int size);

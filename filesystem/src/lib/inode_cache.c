@@ -3,8 +3,9 @@
 * March 15, 2015
 */
 
+#include "../include/inode_cache.h"
 #include <stdbool.h>
-#include "inode_cache.h"
+#include <stdlib.h>
 
 static InodeCache* ic;
 
@@ -19,19 +20,19 @@ void IC_init(){
 }
 
 void IC_put(int inodeNum, Inode* i){
-	*(ic + inodeNum) = i;
+	*(ic->inodes + inodeNum) = i;
 }
 
 bool IC_contains(int inodeNum){
-	return *(ic + inodeNum) != NULL;
+	return *(ic->inodes + inodeNum) != NULL;
 }
 
 Inode* IC_get(int inodeNum){
-	return *(ic + inodeNum);
+	return *(ic->inodes + inodeNum);
 }
 
 void IC_remove(int inodeNum){
-	Inode* i = *(ic + inodeNum);
-	*(ic + inodeNum) = NULL;
+	Inode* i = *(ic->inodes + inodeNum);
+	*(ic->inodes + inodeNum) = NULL;
 	free(i);
 }

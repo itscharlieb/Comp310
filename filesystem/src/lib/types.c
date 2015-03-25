@@ -3,7 +3,7 @@
 * March 16, 2015
 */
 
-#include "types.h"
+#include "../include/types.h"
 
 void write_half_word_as_bytes(byte* buffer, half_word hw){
 	byte b = (hw >> 8);

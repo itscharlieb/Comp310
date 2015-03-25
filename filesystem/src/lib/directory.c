@@ -3,8 +3,10 @@
 * March 21, 2015
 */
 
-#include "directory.h"
+#include "../include/directory.h"
 #include <string.h>
+#include <stdlib.h>
+#include <stdio.h>
 
 static Directory* root;
 
@@ -18,7 +20,7 @@ int DIR_get_inode_number(char* fileName){
 
 	//search through the 100 files and look for the filename
 	for(i = 0; i < MAX_NUM_FILES; i++){
-		tmp = root->directoryEntryTable[i]
+		tmp = root->directoryEntryTable[i];
 		if(tmp == NULL){
 			return;
 		}
@@ -37,6 +39,7 @@ void cascase_directory_entries_forward(){
 	DirectoryEntry* tmp;
 
 	for(i = 0; i < MAX_NUM_FILES; i++){
+		tmp = root->directoryEntryTable[i];
 		if(tmp == NULL){
 			numDeletedFiles ++;
 		}
@@ -58,12 +61,12 @@ void DIR_add_file(char* fileName, int inodeNum){
 		//if found an available entry
 		if(tmp == NULL){
 			tmp = (DirectoryEntry*)malloc(sizeof(DirectoryEntry));
-			memcpy(fileName, tmp->fileName);
+			memcpy(fileName, tmp->fileName, (MAX_FILE_NAME_LENGTH + MAX_FILE_EXTENSION_LENGTH));
 			tmp->inodeNum = inodeNum;
 		}
 	}
 
-	printf("Directory already contains the maximum number of file entries.\n")
+	printf("Directory already contains the maximum number of file entries.\n");
 }
 
 //frees the directory entry associated with the specified fileName from memory
@@ -83,7 +86,7 @@ void DIR_remove_file(char* fileName){
 		}
 	}
 
-	cascase_directory_entries_forward(d);
+	cascase_directory_entries_forward();
 }
 
 /*
@@ -92,11 +95,10 @@ void DIR_remove_file(char* fileName){
 */
 int DIR_get_next_file_name(char* fileNameBuffer){
 	DirectoryEntry* tmp;
-	tmp = root->directoryEntryTable[fileIDLoopCounter];
+	tmp = root->directoryEntryTable[root->fileIDLoopCounter];
 
 	//if we've looped through the entire directory
-	if(tmp == null){
-		reset_file_id_loop_pointer(d);
+	if(tmp == NULL){
 		root->fileIDLoopCounter ++; //increment loop counter
 		return 0;
 	}

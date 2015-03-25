@@ -18,4 +18,4 @@ void FBM_set_block_used(int blockNum);
 void FBM_clear_block(int blockNum);
 
 void FBM_to_string(byte* buffer);
-void FBM_from_string(byte* buffer);
+void FBM_from_string(byte* buffer, int size);

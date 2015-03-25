@@ -3,8 +3,9 @@
 * March 25, 2015
 */
 
-#include "free_block_map.h"
+#include "../include/free_block_map.h"
 #include <string.h>
+#include <stdlib.h>
 
 //TODO size is a CONSTANT
 
@@ -28,10 +29,10 @@ void FBM_clear_block(int blockNum){
 }
 
 void FBM_to_string(byte* buffer){
-	memcpy(buffer, fmb->freeBlockBitmap->bits, fbm->size);
+	memcpy(buffer, fbm->freeBlockBitmap->bits, fbm->size);
 }
 
-void FBM_from_string(byte* buffer, int numBlocks){
-	fbm->size = numBlocks;
-	memcpy(fbm->freeBlockBitmap->bits, buffer, numBlocks / 8)
+void FBM_from_string(byte* buffer, int size){
+	fbm->size = size;
+	memcpy(fbm->freeBlockBitmap->bits, buffer, (size / 8));
 }

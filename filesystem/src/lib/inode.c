@@ -3,27 +3,22 @@
 * March 14, 2015
 */
 
-#include "inode.h"
-#include "types.h"
+#include "../include/inode.h"
+#include <stdlib.h>
 
 //TODO make deep malloc of inode
-inode* create_inode(){
-	inode* i = malloc(sizeof(inode))
+Inode* init_inode(){
+	Inode* inode = malloc(sizeof(Inode));
 	
-	return i;
+	return inode;
 }
 
-//returns the number of data blocks allocated to Inode i
-int get_allocated_data_blocks(Inode* i, int blocks[]){
-
-}
-
-void clear_inode(Inode* i){
+void clear_inode(Inode* inode){
 	
 }
 
 //these are used to write/read Inodes to/from disk 
-void inode_to_string(Inode* i, byte* buffer){
+void inode_to_string(Inode* inode, byte* buffer){
 
 }
 

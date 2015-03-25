@@ -4,15 +4,16 @@
 */
 
 #include "constants.h"
+#include "types.h"
 
 //size of directory entry to disk is 22 bytes. Linked list of directory entries
 typedef struct {
-	byte fileName[MAX_FILE_EXTENSION_LENGTH + MAX_FILE_EXTENSION_LENGTH];
+	byte fileName[MAX_FILE_NAME_LENGTH + MAX_FILE_EXTENSION_LENGTH];
 	half_word inodeNum;
 } DirectoryEntry;
 
 typedef struct {
-	DirectoryEntry directoryEntryTable[MAX_NUM_FILES];
+	DirectoryEntry* directoryEntryTable[MAX_NUM_FILES];
 	int fileIDLoopCounter;
 } Directory;
 

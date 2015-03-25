@@ -3,7 +3,9 @@
 * March 25, 2015
 */
 
-#include "free_inode_map.h"
+#include "../include/free_inode_map.h"
+#include <string.h>
+#include <stdlib.h>
 
 static FreeInodeMap* fim;
 
@@ -13,7 +15,7 @@ void FIM_init(int numInodes){
 }
 
 int FIM_find_free_inode(){
-	return find_free_bit(fim->freeInodeBitmap)
+	return find_free_bit(fim->freeInodeBitmap);
 }
 
 void FIM_set_inode_used(int inodeNum){
@@ -25,10 +27,10 @@ void FIM_clear_inode(int inodeNum){
 }
 
 void FIM_to_string(byte* buffer){
-	memcpy(buffer, fmb->freeInodeBitmap->bits, fbm->size);
+	memcpy(buffer, fim->freeInodeBitmap->bits, fim->size);
 }
 
-void FIM_from_string(byte* buffer, int numInodes){
-	fbm->size = numBlocks;
-	memcpy(fbm->freeInodeBitmap->bits, buffer, numInodes / 8)
+void FIM_from_string(byte* buffer, int size){
+	fim->size = size;
+	memcpy(fim->freeInodeBitmap->bits, buffer, (size / 8));
 }
