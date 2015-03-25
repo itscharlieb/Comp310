@@ -3,6 +3,9 @@
 * March 23, 2015
 **/
 
+#ifndef CONSTANTS_H
+#define CONSTANTS_H
+
 //type constants
 #define BYTE_SIZE 1
 #define HALF_WORD_SIZE 2
@@ -30,3 +33,5 @@
 #define INODES_PER_BLOCK (BLOCK_SIZE / INODE_SIZE)
 #define INODE_TABLE_LENGTH (MAX_NUM_FILES / INODES_PER_BLOCK) + 1 //TODO should only be plus 1 if MNF % IPB == 0
 #define ROOT_DIRECTORY_INODE_NUM 0
+
+#endif

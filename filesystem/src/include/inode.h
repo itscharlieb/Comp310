@@ -3,6 +3,9 @@
 * March 14, 2015
 */
 
+#ifndef INODE_H
+#define INODE_H
+
 //Inode size = 37 byes
 
 #include "types.h"
@@ -27,3 +30,4 @@ Inode* inode_from_string(byte* buffer);
 //stores the indirect data block numbers in the parameter dataBlocks array
 void read_indirect_data_blocks(byte* indirectBlockBuffer, int* dataBlocks, int numIndirectBlocks);
 
+#endif

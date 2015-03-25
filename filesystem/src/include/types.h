@@ -3,6 +3,9 @@
 * March 16, 2015
 */
 
+#ifndef TYPES_H
+#define TYPES_H
+
 /* This file defines data types useful data transfer to and from disk */
 
 //1 byte
@@ -18,3 +21,5 @@ void write_half_word_as_bytes(byte* buffer, half_word hw);
 void write_mem_word_as_bytes(byte* buffer, mem_word mw);
 half_word read_bytes_as_half_word(byte* buffer);
 mem_word read_bytes_as_mem_word(byte* buffer);
+
+#endif

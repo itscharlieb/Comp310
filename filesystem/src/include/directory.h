@@ -3,6 +3,9 @@
 * March 15, 2015
 */
 
+#ifndef DIRECTORY_H
+#define DIRECTORY_H
+
 #include "constants.h"
 #include "types.h"
 
@@ -22,10 +25,12 @@ typedef struct {
 void DIR_init();
 
 //return -1 if the file does not exist
-int DIR_get_inode_number(char* fileName);
+int DIR_get_inode_number(const char* fileName);
 void DIR_add_file(char* fileName, int inodeNum);
 void DIR_remove_file(char* fileName);
 int DIR_get_next_file_name(char* fileNameBuffer);
 
 void DIR_to_string(byte* buffer);
 void DIR_from_string(byte* buffer);
+
+#endif

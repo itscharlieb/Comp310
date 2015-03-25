@@ -3,6 +3,9 @@
 * March 15, 2015
 */
 
+#ifndef FREE_BLOCK_MAP_H
+#define FREE_BLOCK_MAP_H
+
 #include "types.h"
 #include "bitmap.h"
 
@@ -19,3 +22,5 @@ void FBM_clear_block(int blockNum);
 
 void FBM_to_string(byte* buffer);
 void FBM_from_string(byte* buffer, int size);
+
+#endif

@@ -1,9 +1,11 @@
+#include "../include/disk_emu.h"
+
 #include <stdio.h>
 #include <stdlib.h> 
 #include <string.h>
 #include <unistd.h>
 #include <time.h>
-#include "disk_emu.h"
+
 
 
 FILE* fp = NULL;

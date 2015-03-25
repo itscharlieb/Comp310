@@ -14,7 +14,7 @@ void DIR_init(){
 	root = (Directory*)malloc(sizeof(Directory));
 }
 
-int DIR_get_inode_number(char* fileName){
+int DIR_get_inode_number(const char* fileName){
 	int i;
 	DirectoryEntry* tmp;
 

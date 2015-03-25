@@ -3,6 +3,9 @@
 * March 14, 2015
 */
 
+#ifndef FREE_INODE_MAP_H
+#define FREE_INODE_MAP_H
+
 #include "types.h"
 #include "bitmap.h"
 
@@ -19,3 +22,5 @@ void FIM_clear_inode(int inodeNum);
 
 void FIM_to_string(byte* buffer);
 void FIM_from_string(byte* buffer, int size);
+
+#endif

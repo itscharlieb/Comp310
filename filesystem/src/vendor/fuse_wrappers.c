@@ -1,5 +1,8 @@
 #define FUSE_USE_VERSION 30
 
+#include "../include/disk_emu.h"
+#include "../include/sfs_api.h"
+
 #include <fuse.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -10,8 +13,6 @@
 #include <dirent.h>
 #include <errno.h>
 #include <sys/time.h>
-#include "disk_emu.h"
-#include "sfs_api.h"
 
 static int fuse_getattr(const char *path, struct stat *stbuf)
 {
@@ -23,7 +24,7 @@ static int fuse_getattr(const char *path, struct stat *stbuf)
     if (strcmp(path, "/") == 0) {
         stbuf->st_mode = S_IFDIR | 0755;
         stbuf->st_nlink = 2;
-    } else if((size = sfs_fet_file_size(path)) != -1) {
+    } else if((size = sfs_get_file_size(path)) != -1) {
         stbuf->st_mode = S_IFREG | 0444;
         stbuf->st_nlink = 1;
         stbuf->st_size = size;

@@ -61,7 +61,8 @@ void init_free_block_map(byte* buffer){
 // }
 
 int init_directory(byte* buffer){
-	//TODO
+	DIR_init();
+	//TODO write dir to disk
 }
 
 int init_sfs(){
@@ -289,7 +290,7 @@ int get_number_indirect_pointers(Inode* inode){
 	/*
 	* TODO please explain this later
 	*/
-	return 1 + ((i->size - directOverflowSize) / BLOCK_SIZE);
+	return 1 + ((inode->size - directOverflowSize) / BLOCK_SIZE);
 }
 
 //loads the indirect_pointer data block allocated to the parameter inode
@@ -356,7 +357,10 @@ int get_number_new_blocks_to_write(FileDescriptor* fd, int length, int numAlloca
 
 //executes a file write
 int execute_write(const char* buffer, int length, half_word* dataBlocks, int initialByteOffset){
-	char* tmpBufferPointer = buffer;
+	char* copiedBuffer = (byte*)malloc(sizeof(byte) * length);
+	memcpy(copiedBuffer, copiedBuffer, length);
+
+	char* tmpBufferPointer = copiedBuffer;
 	int bytesWritten = 0, bytesToBeWritten, i = 0;
 
 	//write initial partial block
@@ -533,7 +537,7 @@ int sfs_remove(char* fileName){
 
 /*************************************GET_NEXT********************************************/
 
-int sfs_get_next_filename(char* fileNameBuffer){
+int sfs_get_next_file_name(char* fileNameBuffer){
 	return DIR_get_next_file_name(fileNameBuffer);
 }
 

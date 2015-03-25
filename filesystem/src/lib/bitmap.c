@@ -14,6 +14,7 @@ Bitmap* init_bitmap(unsigned int size){
 	int numBytes = size / 8;
 	Bitmap* bitmap = (Bitmap*)malloc(sizeof(bitmap));
 	bitmap->bits = (byte*)malloc(numBytes);
+	bitmap->size = size;
 	return bitmap;
 }
 
@@ -27,4 +28,13 @@ void clear_bit(Bitmap* b, unsigned int bitNum){
 
 int get_bit(Bitmap* b, unsigned int bitNum){
 	return b->bits[bitNum / 8] & (1 << (bitNum & 7)) ? 1 : 0;
+}
+
+int find_free_bit(Bitmap* b){
+	int i, bitNum;
+	for(i = 0; i < b->size; i++){
+		if((bitNum = get_bit(b, i)) == 0){
+			return bitNum;
+		}
+	}
 }

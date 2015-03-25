@@ -3,6 +3,9 @@
 * March 15, 2015
 */
 
+#ifndef FILE_DESCRIPTOR_TABLE_H
+#define FILE_DESCRIPTOR_TABLE_H
+
 #include "constants.h"
 
 //the write read pointers are not absolute addresses - they are relative to the size of the file
@@ -28,3 +31,5 @@ void FDT_remove_file_descriptor(int fileID);
 
 //puts the inodeNum in the table AND returns the associated file descriptor
 int FDT_put_file_descriptor(int inodeNum);
+
+#endif

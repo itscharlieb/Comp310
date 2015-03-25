@@ -7,5 +7,5 @@ int sfs_fwrite(int fileID, const char *buf, int length);
 int sfs_fread(int fileID, char *buf, int length);
 int sfs_fseek(int fileID, int offset);
 int sfs_remove(char *file);
-int sfs_get_next_filename(char* filename);
+int sfs_get_next_file_name(char* filename);
 int sfs_get_file_size(const char* path);
