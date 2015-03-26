@@ -6,20 +6,25 @@
 #include "../include/bitmap.h"
 #include <stdint.h>   /* for uint32_t */
 #include <stdlib.h>
+#include <stdio.h>
 
 /**
 *
 */
-Bitmap* init_bitmap(unsigned int size){
+Bitmap* bitmap_init(unsigned int size){
 	int numBytes = size / 8;
 	Bitmap* bitmap = (Bitmap*)malloc(sizeof(bitmap));
 	bitmap->bits = (byte*)malloc(numBytes);
 	bitmap->size = size;
+
 	return bitmap;
 }
 
 void set_bit(Bitmap* b, unsigned int bitNum){
 	b->bits[bitNum / 8] |= 1 << (bitNum & 7);
+
+	// printf("[set_bit] Set bit [%d] to used.\n", bitNum);
+	// fflush(stdout);
 }
 
 void clear_bit(Bitmap* b, unsigned int bitNum){

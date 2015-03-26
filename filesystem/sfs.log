@@ -1,0 +1,21 @@
+Opened log file.
+[init_super_block] Writing super block to disk.
+[init_super_block] Super block written.
+
+[init_free_block_map] Initializing free block map.
+[init_free_block_map] Free block map initialization successful.
+
+[init_free_inode_map] Initializing free inode map.
+[FIM_set_inode_used] Setting inodeNum [0] used.
+[init_free_inode_map] Free inode map initialization successful.
+
+[init_directory] Initializing directory.
+[init_directory] Directory initialization successful.
+
+[mksfs] Initializing file descriptor table.
+[mksfs] File descriptor table initialization successful.
+
+[mksfs] Initializing inode cache.
+[mksfs] Inode cache initialization successful.
+
+[sfs_open] Opening file [DMDPWAOT.AZLPQUKRYAQ].

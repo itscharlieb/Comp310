@@ -2,12 +2,16 @@ binpath = bin
 srcpath = src/lib
 vendorpath = src/vendor
 headerpath = src/include
+testpath = src/test
+
+allobjects = $(binpath)/sfs_api.o $(binpath)/fuse_wrappers.o $(binpath)/disk_emu.o $(binpath)/super_block.o $(binpath)/directory.o $(binpath)/file_descriptor_table.o $(binpath)/free_block_map.o $(binpath)/inode_cache.o $(binpath)/free_inode_map.o $(binpath)/inode.o $(binpath)/bitmap.o $(binpath)/types.o $(binpath)/util.o $(binpath)/output_file.o 
+testobjects = $(binpath)/sfs_api.o $(binpath)/disk_emu.o $(binpath)/super_block.o $(binpath)/directory.o $(binpath)/file_descriptor_table.o $(binpath)/free_block_map.o $(binpath)/inode_cache.o $(binpath)/free_inode_map.o $(binpath)/inode.o $(binpath)/bitmap.o $(binpath)/types.o $(binpath)/util.o $(binpath)/output_file.o
 
 linkflags = `pkg-config fuse --cflags --libs`
 
 
-all: $(binpath)/sfs_api.o $(binpath)/fuse_wrappers.o $(binpath)/disk_emu.o $(binpath)/super_block.o $(binpath)/directory.o $(binpath)/file_descriptor_table.o $(binpath)/free_block_map.o $(binpath)/inode_cache.o $(binpath)/free_inode_map.o $(binpath)/inode.o $(binpath)/bitmap.o $(binpath)/types.o $(binpath)/util.o 
-	gcc -o $(binpath)/sfs $(binpath)/sfs_api.o $(binpath)/fuse_wrappers.o $(binpath)/disk_emu.o $(binpath)/super_block.o $(binpath)/directory.o $(binpath)/file_descriptor_table.o $(binpath)/free_block_map.o $(binpath)/inode_cache.o $(binpath)/free_inode_map.o $(binpath)/inode.o $(binpath)/bitmap.o $(binpath)/types.o $(binpath)/util.o $(linkflags)
+all: $(allobjects)
+	gcc -o $(binpath)/sfs $(allobjects) $(linkflags) 
 
 ############################### LIB ####################################
 
@@ -44,6 +48,9 @@ $(binpath)/types.o: $(headerpath)/types.h $(srcpath)/types.c
 $(binpath)/util.o: $(headerpath)/util.h $(srcpath)/util.c
 	gcc -c $(srcpath)/util.c -o $(binpath)/util.o
 
+$(binpath)/output_file.o: $(headerpath)/output_file.h $(srcpath)/output_file.c
+	gcc -c $(srcpath)/output_file.c -o $(binpath)/output_file.o
+
 ############################## VENDOR ##################################
 
 $(binpath)/fuse_wrappers.o: $(headerpath)/sfs_api.h $(headerpath)/disk_emu.h $(vendorpath)/fuse_wrappers.c
@@ -54,7 +61,10 @@ $(binpath)/disk_emu.o: $(headerpath)/disk_emu.h $(vendorpath)/disk_emu.c
 
 ############################## CLEAN ###################################
 
-hugoclean: clean
+test: $(testobjects)
+	gcc $(testobjects) $(testpath)/sfs_test.c -o $(binpath)/test
+
+hugo: clean
 	rm $(binpath)/sfs
 
 clean: 

@@ -10,11 +10,11 @@
 void super_block_to_string(byte* buffer){
 	write_mem_word_as_bytes(buffer, MAGIC);
 	buffer += MEM_WORD_SIZE;
-	write_half_word_as_bytes(buffer, BLOCK_SIZE);
-	buffer += HALF_WORD_SIZE;
+	write_mem_word_as_bytes(buffer, BLOCK_SIZE);
+	buffer += MEM_WORD_SIZE;
 	write_mem_word_as_bytes(buffer, NUM_BLOCKS);
-	buffer += HALF_WORD_SIZE;
+	buffer += MEM_WORD_SIZE;
 	write_half_word_as_bytes(buffer, ROOT_DIRECTORY_INODE_NUM);
 	buffer += HALF_WORD_SIZE;
-	write_mem_word_as_bytes(buffer, INODE_TABLE_LENGTH);
+	write_half_word_as_bytes(buffer, INODE_TABLE_LENGTH);
 }

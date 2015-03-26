@@ -8,11 +8,25 @@
 #include <string.h>
 
 void write_half_word_as_bytes(byte* buffer, half_word hw){
+	half_word bitMask = 0x00FF;
+	byte bytes[2];
+
+	bytes[1] = hw >> bitMask;
+	bytes[0] = hw >> 8 & bitMask;
+
 	memcpy(buffer, &hw, HALF_WORD_SIZE);
 }
 
 void write_mem_word_as_bytes(byte* buffer, mem_word mw){
-	memcpy(buffer, &mw, MEM_WORD_SIZE);
+	mem_word bitMask = 0x000000FF;
+	byte bytes[2];
+
+	bytes[3] = mw & bitMask;
+	bytes[2] = mw >> 8 & bitMask;
+	bytes[1] = mw >> 16 & bitMask;
+	bytes[0] = mw >> 24 & bitMask;
+
+	memcpy(buffer, bytes, MEM_WORD_SIZE);
 }
 
 half_word read_bytes_as_half_word(byte* buffer){

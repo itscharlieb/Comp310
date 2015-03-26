@@ -19,6 +19,7 @@
 #include "../include/super_block.h"
 #include "../include/util.h"
 #include "../include/types.h"
+#include "../include/output_file.h"
 
 #include <string.h>
 #include <stdio.h>
@@ -28,16 +29,15 @@ char diskName[] = "itscharlieb FS";
 
 /***********************************INIT**************************************/
 
-void init_free_inode_map(byte* buffer){
-	int numInodes = MAX_NUM_FILES;
-	FIM_init(numInodes);
-	FIM_set_inode_used(ROOT_DIRECTORY_INODE_NUM);
-	FIM_to_string(buffer);
-	write_blocks(FREE_INODE_MAP_BLOCK_NUM, 1, buffer);
-}
-
 void init_free_block_map(byte* buffer){
+	printf("[init_free_block_map] Initializing free block map.\n");
+	fflush(stdout);
+
 	FBM_init(NUM_BLOCKS);
+
+	printf("[init_free_block_map] Free block map initialization successful.\n\n");
+	fflush(stdout);
+
 	FBM_set_block_used(SUPER_BLOCK_BLOCK_NUM);
 
 	int i;
@@ -53,22 +53,51 @@ void init_free_block_map(byte* buffer){
 	write_blocks(FREE_BLOCK_MAP_BLOCK_NUM, 1, buffer);
 }
 
-// int init_super_block(byte* buffer){
-// 	init super block, write it to disk
-// 	superBlock = create_super_block();
-// 	super_block_to_string(superBlock, buffer);
-// 	write_blocks(SUPER_BLOCK_BLOCK_NUM, 1, buffer);
-// }
+void init_free_inode_map(byte* buffer){
+	printf("[init_free_inode_map] Initializing free inode map.\n");
+	fflush(stdout);
+
+	int numInodes = MAX_NUM_FILES;
+	FIM_init(numInodes);
+	FIM_set_inode_used(ROOT_DIRECTORY_INODE_NUM);
+	FIM_to_string(buffer);
+	write_blocks(FREE_INODE_MAP_BLOCK_NUM, 1, buffer);
+
+	printf("[init_free_inode_map] Free inode map initialization successful.\n\n");
+	fflush(stdout);
+}
+
+
+int init_super_block(byte* buffer){
+	printf("[init_super_block] Writing super block to disk.\n");
+	fflush(stdout);
+
+	//init super block, write it to disk
+	//superBlock = create_super_block();
+	super_block_to_string(buffer);
+	write_blocks(SUPER_BLOCK_BLOCK_NUM, 1, buffer);
+
+	printf("[init_super_block] Super block written.\n\n");
+	fflush(stdout);
+
+}
 
 int init_directory(byte* buffer){
+	printf("[init_directory] Initializing directory.\n");
+	fflush(stdout);
+
 	DIR_init();
 	//TODO write dir to disk
+
+	printf("[init_directory] Directory initialization successful.\n\n");
+	fflush(stdout);
+
 }
 
 int init_sfs(){
 	//if unsuccessful load of the emulation disk
 	if(init_fresh_disk(diskName, BLOCK_SIZE, NUM_BLOCKS) == -1){
-		printf("Failed to initialize the file system");
+		printf("Failed to initialize the file system.\n");
 		return -1;
 	}
 
@@ -76,6 +105,8 @@ int init_sfs(){
 	byte* buffer = (byte*) malloc(sizeof(byte) * BLOCK_SIZE);
 
 	//init_super_block(buffer); just constants
+
+	init_super_block(buffer);
 	init_free_block_map(buffer);
 	init_free_inode_map(buffer);
 	init_directory(buffer);
@@ -128,6 +159,8 @@ int load_sfs(){
 * makes an instance of the SFS either by loading one from disk or by creating a new one
 */
 int mksfs(int fresh){
+	init_output_file(); //redirects all stdout prints to a debug file
+
 	//if fresh, then initialize a new disk 
 	if(fresh){
 		init_sfs();
@@ -137,9 +170,21 @@ int mksfs(int fresh){
 	else{
 		load_sfs();
 	}
+	printf("[mksfs] Initializing file descriptor table.\n");
+	fflush(stdout);
 
 	FDT_init(MAX_NUM_FILES);
+
+	printf("[mksfs] File descriptor table initialization successful.\n\n");
+	fflush(stdout);
+
+	printf("[mksfs] Initializing inode cache.\n");
+	fflush(stdout);
+
 	IC_init();
+
+	printf("[mksfs] Inode cache initialization successful.\n\n");
+	fflush(stdout);
 	return 0;	
 }
 
@@ -219,6 +264,9 @@ void load_file(int inodeNum){
 * Marks the a
 */
 int create_file(char* fileName){
+	printf("[create_file] Creating new file [%s].\n", fileName);
+	fflush(stdout);
+
 	int inodeNum = FIM_find_free_inode();
 	FIM_set_inode_used(inodeNum);
 	DIR_add_file(fileName, inodeNum);
@@ -228,6 +276,8 @@ int create_file(char* fileName){
 	IC_put(inodeNum, newInode);
 	//TODO write new directory data to disk
 
+	printf("[create_file] Successfully created [%s] allocated to inodeNum [%d].\n\n", fileName, inodeNum);
+	fflush(stdout);
 	return inodeNum;
 }
 
@@ -238,6 +288,9 @@ int create_file(char* fileName){
 * @return fileDescriptor associated with the opened file
 */
 int sfs_fopen(char* fileName){
+	printf("[sfs_open] Opening file [%s].\n", fileName);
+	fflush(stdout);
+
 	int inodeNum = DIR_get_inode_number(fileName);
 	int fileID;
 

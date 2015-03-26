@@ -12,7 +12,8 @@
 static FreeBlockMap* fbm;
 
 void FBM_init(int numBlocks){
-	fbm->freeBlockBitmap = init_bitmap(numBlocks);
+	fbm = (FreeBlockMap*)malloc(sizeof(FreeBlockMap));
+	fbm->freeBlockBitmap = bitmap_init(numBlocks);
 	fbm->size = numBlocks;
 }
 
@@ -29,10 +30,11 @@ void FBM_clear_block(int blockNum){
 }
 
 void FBM_to_string(byte* buffer){
-	memcpy(buffer, fbm->freeBlockBitmap->bits, fbm->size);
+	memcpy(buffer, fbm->freeBlockBitmap->bits, (fbm->size) / 8);
 }
 
 void FBM_from_string(byte* buffer, int size){
+	fbm = (FreeBlockMap*)malloc(sizeof(FreeBlockMap));
 	fbm->size = size;
 	memcpy(fbm->freeBlockBitmap->bits, buffer, (size / 8));
 }

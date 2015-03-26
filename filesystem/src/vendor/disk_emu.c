@@ -6,8 +6,6 @@
 #include <unistd.h>
 #include <time.h>
 
-
-
 FILE* fp = NULL;
 double L, p;
 double r;
