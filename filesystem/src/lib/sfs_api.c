@@ -235,7 +235,7 @@ void write_inode_to_disk(int inodeNum){
 }
 
 /**
-*
+* Loads the inode from disk and returns it.
 */
 Inode* load_inode_from_disk(int inodeNum){
 	int inodeBlockNum = get_inode_block_number(inodeNum);
@@ -246,8 +246,6 @@ Inode* load_inode_from_disk(int inodeNum){
 	byte* inodeStartAddress = buffer + get_inode_byte_offset(inodeNum);
 
 	Inode* loadedInode = inode_from_string(inodeStartAddress);
-	IC_put(inodeNum, loadedInode);
-
 	free(buffer);
 	return loadedInode;
 }
@@ -274,9 +272,10 @@ int create_file(char* fileName){
 	Inode* newInode = load_inode_from_disk(inodeNum);
 	clear_inode(newInode); //make sure to reset any residual values of this inode
 	IC_put(inodeNum, newInode);
+
 	//TODO write new directory data to disk
 
-	printf("[create_file] Successfully created [%s] allocated to inodeNum [%d].\n\n", fileName, inodeNum);
+	printf("[create_file] Successfully created [%s] allocated to inodeNum [%d].\n", fileName, inodeNum);
 	fflush(stdout);
 	return inodeNum;
 }
@@ -288,7 +287,7 @@ int create_file(char* fileName){
 * @return fileDescriptor associated with the opened file
 */
 int sfs_fopen(char* fileName){
-	printf("[sfs_open] Opening file [%s].\n", fileName);
+	printf("\n[sfs_open] Opening file [%s].\n", fileName);
 	fflush(stdout);
 
 	int inodeNum = DIR_get_inode_number(fileName);
@@ -301,6 +300,8 @@ int sfs_fopen(char* fileName){
 
 	//file already exists
 	else{
+		printf("[sfs_open] File [%s] exists in the directory.\n", fileName);
+		fflush(stdout);
 
 		fileID = FDT_get_file_id(inodeNum);
 		//if file is already open, return it's current fileID
@@ -317,6 +318,10 @@ int sfs_fopen(char* fileName){
 	//put the inode in the file descriptor table
 	//TODO update the file write/read pointers
 	fileID = FDT_put_file_descriptor(inodeNum);
+
+	printf("[sfs_open] Opened [%s] with inodeNum [%d] and file descriptor [%d].\n", fileName, inodeNum, fileID);
+	fflush(stdout);
+
 	return fileID;
 }
 

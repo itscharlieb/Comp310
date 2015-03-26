@@ -18,4 +18,47 @@ Opened log file.
 [mksfs] Initializing inode cache.
 [mksfs] Inode cache initialization successful.
 
-[sfs_open] Opening file [DMDPWAOT.AZLPQUKRYAQ].
+
+[sfs_open] Opening file [SPRNPLMC.OVPTOWQBIHQ].
+[DIR_get_inode_number] [SPRNPLMC.OVPTOWQBIHQ] does not yet exist in the root directory.
+[create_file] Creating new file [SPRNPLMC.OVPTOWQBIHQ].
+[FIM_find_free_inode] inodeNum [0] is free.
+[FIM_set_inode_used] Setting inodeNum [0] used.
+[DIR_add_file] Trying to add [SPRNPLMC.OVPTOWQBIHQ] with inodeNum [0] to directory.
+[DIR_add_file] Successfully assigned [SPRNPLMC.OVPTOWQBIHQ] to DirectoryEntry [0].
+[IC_put] Putting inodeNum [0] in the inode cache.
+[create_file] Successfully created [SPRNPLMC.OVPTOWQBIHQ] allocated to inodeNum [0].
+[sfs_open] Opened [SPRNPLMC.OVPTOWQBIHQ] with inodeNum [0] and file descriptor [0].
+
+[sfs_open] Opening file [SPRNPLMC.OVPTOWQBIHQ].
+[DIR_get_inode_number] [SPRNPLMC.OVPTOWQBIHQ] does not yet exist in the root directory.
+[create_file] Creating new file [SPRNPLMC.OVPTOWQBIHQ].
+[FIM_find_free_inode] inodeNum [0] is free.
+[FIM_set_inode_used] Setting inodeNum [0] used.
+[DIR_add_file] Trying to add [SPRNPLMC.OVPTOWQBIHQ] with inodeNum [0] to directory.
+[DIR_add_file] Successfully assigned [SPRNPLMC.OVPTOWQBIHQ] to DirectoryEntry [0].
+[IC_put] Putting inodeNum [0] in the inode cache.
+[create_file] Successfully created [SPRNPLMC.OVPTOWQBIHQ] allocated to inodeNum [0].
+[sfs_open] Opened [SPRNPLMC.OVPTOWQBIHQ] with inodeNum [0] and file descriptor [0].
+
+[sfs_open] Opening file [OIKJTJUJ.OVAGKRTZEID].
+[DIR_get_inode_number] [OIKJTJUJ.OVAGKRTZEID] does not yet exist in the root directory.
+[create_file] Creating new file [OIKJTJUJ.OVAGKRTZEID].
+[FIM_find_free_inode] inodeNum [0] is free.
+[FIM_set_inode_used] Setting inodeNum [0] used.
+[DIR_add_file] Trying to add [OIKJTJUJ.OVAGKRTZEID] with inodeNum [0] to directory.
+[DIR_add_file] Successfully assigned [OIKJTJUJ.OVAGKRTZEID] to DirectoryEntry [0].
+[IC_put] Putting inodeNum [0] in the inode cache.
+[create_file] Successfully created [OIKJTJUJ.OVAGKRTZEID] allocated to inodeNum [0].
+[sfs_open] Opened [OIKJTJUJ.OVAGKRTZEID] with inodeNum [0] and file descriptor [0].
+
+[sfs_open] Opening file [OIKJTJUJ.OVAGKRTZEID].
+[DIR_get_inode_number] [OIKJTJUJ.OVAGKRTZEID] does not yet exist in the root directory.
+[create_file] Creating new file [OIKJTJUJ.OVAGKRTZEID].
+[FIM_find_free_inode] inodeNum [0] is free.
+[FIM_set_inode_used] Setting inodeNum [0] used.
+[DIR_add_file] Trying to add [OIKJTJUJ.OVAGKRTZEID] with inodeNum [0] to directory.
+[DIR_add_file] Successfully assigned [OIKJTJUJ.OVAGKRTZEID] to DirectoryEntry [0].
+[IC_put] Putting inodeNum [0] in the inode cache.
+[create_file] Successfully created [OIKJTJUJ.OVAGKRTZEID] allocated to inodeNum [0].
+[sfs_open] Opened [OIKJTJUJ.OVAGKRTZEID] with inodeNum [0] and file descriptor [0].

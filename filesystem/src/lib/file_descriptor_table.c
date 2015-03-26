@@ -16,6 +16,11 @@ If a file associated with inode 42 is open, the index 42 in the fdt will hold it
 
 void FDT_init(){
 	fdt = (FileDescriptorTable*)malloc(sizeof(FileDescriptorTable));
+
+	int i;
+	for(i = 0; i < MAX_NUM_FILES; i++){
+		fdt->fileDescriptors[i] = NULL;
+	}
 }
 
 //returns -1 if the specified inodeNum does not exist in the inode table    
@@ -30,16 +35,11 @@ int FDT_contains_file_id(int inodeNum){
 //puts the inodeNum in the table AND returns the associated file descriptor
 int FDT_put_file_descriptor(int inodeNum){
 	FileDescriptor* fd = fdt->fileDescriptors[inodeNum];
-	fd->inodeNum = inodeNum;
+	fd = (FileDescriptor*)malloc(sizeof(FileDescriptor));
 	fd->readPtr = 0;
 	fd->writePtr = 0;
-	
-	// FileDescriptor* fd = *(fdt->fileDescriptors + inodeNum);
-	// fd = (FileDescriptor*)malloc(sizeof(FileDescriptor));
-	// fd->readPtr = 0;
-	// fd->writePtr = 0;
-	// fd->inodeNum = inodeNum;
-	// return inodeNum; 
+	fd->inodeNum = inodeNum;
+	return inodeNum; 
 }
 
 FileDescriptor* FDT_get_file_descriptor(int fileID){

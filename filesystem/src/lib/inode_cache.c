@@ -6,6 +6,7 @@
 #include "../include/inode_cache.h"
 #include <stdbool.h>
 #include <stdlib.h>
+#include <stdio.h>
 
 static InodeCache* ic;
 
@@ -20,6 +21,9 @@ void IC_init(){
 }
 
 void IC_put(int inodeNum, Inode* i){
+	printf("[IC_put] Putting inodeNum [%d] in the inode cache.\n", inodeNum);
+	fflush(stdout);
+
 	*(ic->inodes + inodeNum) = i;
 }
 

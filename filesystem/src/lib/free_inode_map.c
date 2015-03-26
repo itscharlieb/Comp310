@@ -25,6 +25,8 @@ int FIM_find_free_inode(){
 
 void FIM_set_inode_used(int inodeNum){
 	printf("[FIM_set_inode_used] Setting inodeNum [%d] used.\n", inodeNum);
+	fflush(stdout);
+
 	set_bit(fim->freeInodeBitmap, inodeNum);
 }
 

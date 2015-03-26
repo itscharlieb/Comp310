@@ -12,16 +12,12 @@ static Directory* root;
 
 void DIR_init(){
 	root = (Directory*)malloc(sizeof(Directory));
-	//root->directoryEntryTable = {NULL};
 	root->fileIDLoopCounter = 0;
-}
 
-//0 if false, non zero otherwise
-int directory_entry_is_empty(DirectoryEntry* dirEntry){
-	if(dirEntry->inodeNum == 0){
-		return 1;
+	int i;
+	for(i = 0; i < MAX_NUM_FILES; i++){
+		root->directoryEntryTable[i] = NULL;
 	}
-	return 0;
 }
 
 int DIR_get_inode_number(const char* fileName){
@@ -35,7 +31,7 @@ int DIR_get_inode_number(const char* fileName){
 
 		tmp = root->directoryEntryTable[i];
 
-		if(directory_entry_is_empty(tmp)){
+		if(!(tmp == NULL)){
 			printf("[DIR_get_inode_number] Dir entry [%d] is not empty.\n", i);
 			fflush(stdout);
 
@@ -45,7 +41,7 @@ int DIR_get_inode_number(const char* fileName){
 		}
 	}
 
-	printf("[DIR_get_inode_number] [%s] does not yet exist in the root directory.\n\n", fileName);
+	printf("[DIR_get_inode_number] [%s] does not yet exist in the root directory.\n", fileName);
 	fflush(stdout);
 	return -1;
 }
@@ -81,18 +77,18 @@ void DIR_add_file(char* fileName, int inodeNum){
 		tmp = root->directoryEntryTable[i];
 
 		//if found an available entry
-		if(!(directory_entry_is_empty(tmp))){
+		if(tmp == NULL){
 			tmp = (DirectoryEntry*)malloc(sizeof(DirectoryEntry));
-			memcpy(fileName, tmp->fileName, (MAX_FILE_NAME_LENGTH + MAX_FILE_EXTENSION_LENGTH));
+			memcpy(tmp->fileName, fileName, (MAX_FILE_NAME_LENGTH + MAX_FILE_EXTENSION_LENGTH));
 			tmp->inodeNum = inodeNum;
 
-			printf("[DIR_add_file] Successfully assigned [%s] to DirectoryEntry [%d].\n\n", fileName, inodeNum);
+			printf("[DIR_add_file] Successfully assigned [%s] to DirectoryEntry [%d].\n", fileName, inodeNum);
 			fflush(stdout);
 			return;
 		}
 	}
 
-	printf("[DIR_add_file] Directory already contains the maximum number of file entries.\n\n");
+	printf("[DIR_add_file] Directory already contains the maximum number of file entries.\n");
 }
 
 //frees the directory entry associated with the specified fileName from memory

@@ -85,7 +85,7 @@ main(int argc, char **argv)
     names[i] = rand_name();
     fds[i] = sfs_fopen(names[i]);
     if (fds[i] < 0) {
-      fprintf(stderr, "[TEST_FILE] ERROR: creating first test file %s\n", names[i]);
+      fprintf(stderr, "ERROR: creating first test file %s\n", names[i]);
       error_count++;
     }
     tmp = sfs_fopen(names[i]);
