@@ -19,46 +19,32 @@ Opened log file.
 [mksfs] Inode cache initialization successful.
 
 
-[sfs_open] Opening file [SPRNPLMC.OVPTOWQBIHQ].
-[DIR_get_inode_number] [SPRNPLMC.OVPTOWQBIHQ] does not yet exist in the root directory.
-[create_file] Creating new file [SPRNPLMC.OVPTOWQBIHQ].
-[FIM_find_free_inode] inodeNum [0] is free.
-[FIM_set_inode_used] Setting inodeNum [0] used.
-[DIR_add_file] Trying to add [SPRNPLMC.OVPTOWQBIHQ] with inodeNum [0] to directory.
-[DIR_add_file] Successfully assigned [SPRNPLMC.OVPTOWQBIHQ] to DirectoryEntry [0].
-[IC_put] Putting inodeNum [0] in the inode cache.
-[create_file] Successfully created [SPRNPLMC.OVPTOWQBIHQ] allocated to inodeNum [0].
-[sfs_open] Opened [SPRNPLMC.OVPTOWQBIHQ] with inodeNum [0] and file descriptor [0].
+[sfs_open] Opening file [ETVOQUTOUXJAHTAV.SXN].
+[DIR_get_inode_number] [ETVOQUTOUXJAHTAV.SXN] does not yet exist in the root directory.
+[create_file] Creating new file [ETVOQUTOUXJAHTAV.SXN].
+[FIM_find_free_inode] inodeNum [1] is free.
+[FIM_set_inode_used] Setting inodeNum [1] used.
+[DIR_add_file] Trying to add [ETVOQUTOUXJAHTAV.SXN] with inodeNum [1] to directory.
+[DIR_add_file] Successfully assigned [ETVOQUTOUXJAHTAV.SXN] to DirectoryEntry [1].
+[IC_put] Putting inodeNum [1] in the inode cache.
+[create_file] Successfully created [ETVOQUTOUXJAHTAV.SXN] allocated to inodeNum [1].
+[sfs_open] Opened [ETVOQUTOUXJAHTAV.SXN] with inodeNum [1] and file descriptor [1].
 
-[sfs_open] Opening file [SPRNPLMC.OVPTOWQBIHQ].
-[DIR_get_inode_number] [SPRNPLMC.OVPTOWQBIHQ] does not yet exist in the root directory.
-[create_file] Creating new file [SPRNPLMC.OVPTOWQBIHQ].
-[FIM_find_free_inode] inodeNum [0] is free.
-[FIM_set_inode_used] Setting inodeNum [0] used.
-[DIR_add_file] Trying to add [SPRNPLMC.OVPTOWQBIHQ] with inodeNum [0] to directory.
-[DIR_add_file] Successfully assigned [SPRNPLMC.OVPTOWQBIHQ] to DirectoryEntry [0].
-[IC_put] Putting inodeNum [0] in the inode cache.
-[create_file] Successfully created [SPRNPLMC.OVPTOWQBIHQ] allocated to inodeNum [0].
-[sfs_open] Opened [SPRNPLMC.OVPTOWQBIHQ] with inodeNum [0] and file descriptor [0].
+[sfs_open] Opening file [ETVOQUTOUXJAHTAV.SXN].
+[sfs_open] File [ETVOQUTOUXJAHTAV.SXN] exists in the directory.
+[sfs_open] Opened [ETVOQUTOUXJAHTAV.SXN] with inodeNum [1] and file descriptor [1].
 
-[sfs_open] Opening file [OIKJTJUJ.OVAGKRTZEID].
-[DIR_get_inode_number] [OIKJTJUJ.OVAGKRTZEID] does not yet exist in the root directory.
-[create_file] Creating new file [OIKJTJUJ.OVAGKRTZEID].
-[FIM_find_free_inode] inodeNum [0] is free.
-[FIM_set_inode_used] Setting inodeNum [0] used.
-[DIR_add_file] Trying to add [OIKJTJUJ.OVAGKRTZEID] with inodeNum [0] to directory.
-[DIR_add_file] Successfully assigned [OIKJTJUJ.OVAGKRTZEID] to DirectoryEntry [0].
-[IC_put] Putting inodeNum [0] in the inode cache.
-[create_file] Successfully created [OIKJTJUJ.OVAGKRTZEID] allocated to inodeNum [0].
-[sfs_open] Opened [OIKJTJUJ.OVAGKRTZEID] with inodeNum [0] and file descriptor [0].
+[sfs_open] Opening file [PQEYJKLKDGTHBRYR.LTH].
+[DIR_get_inode_number] [PQEYJKLKDGTHBRYR.LTH] does not yet exist in the root directory.
+[create_file] Creating new file [PQEYJKLKDGTHBRYR.LTH].
+[FIM_find_free_inode] inodeNum [2] is free.
+[FIM_set_inode_used] Setting inodeNum [2] used.
+[DIR_add_file] Trying to add [PQEYJKLKDGTHBRYR.LTH] with inodeNum [2] to directory.
+[DIR_add_file] Successfully assigned [PQEYJKLKDGTHBRYR.LTH] to DirectoryEntry [2].
+[IC_put] Putting inodeNum [2] in the inode cache.
+[create_file] Successfully created [PQEYJKLKDGTHBRYR.LTH] allocated to inodeNum [2].
+[sfs_open] Opened [PQEYJKLKDGTHBRYR.LTH] with inodeNum [2] and file descriptor [2].
 
-[sfs_open] Opening file [OIKJTJUJ.OVAGKRTZEID].
-[DIR_get_inode_number] [OIKJTJUJ.OVAGKRTZEID] does not yet exist in the root directory.
-[create_file] Creating new file [OIKJTJUJ.OVAGKRTZEID].
-[FIM_find_free_inode] inodeNum [0] is free.
-[FIM_set_inode_used] Setting inodeNum [0] used.
-[DIR_add_file] Trying to add [OIKJTJUJ.OVAGKRTZEID] with inodeNum [0] to directory.
-[DIR_add_file] Successfully assigned [OIKJTJUJ.OVAGKRTZEID] to DirectoryEntry [0].
-[IC_put] Putting inodeNum [0] in the inode cache.
-[create_file] Successfully created [OIKJTJUJ.OVAGKRTZEID] allocated to inodeNum [0].
-[sfs_open] Opened [OIKJTJUJ.OVAGKRTZEID] with inodeNum [0] and file descriptor [0].
+[sfs_open] Opening file [PQEYJKLKDGTHBRYR.LTH].
+[sfs_open] File [PQEYJKLKDGTHBRYR.LTH] exists in the directory.
+[sfs_open] Opened [PQEYJKLKDGTHBRYR.LTH] with inodeNum [2] and file descriptor [2].

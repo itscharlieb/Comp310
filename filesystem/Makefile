@@ -59,10 +59,15 @@ $(binpath)/fuse_wrappers.o: $(headerpath)/sfs_api.h $(headerpath)/disk_emu.h $(v
 $(binpath)/disk_emu.o: $(headerpath)/disk_emu.h $(vendorpath)/disk_emu.c
 	gcc -c $(vendorpath)/disk_emu.c -o $(binpath)/disk_emu.o
 
-############################## CLEAN ###################################
+############################## TEST #####################################
+
+bitmaptest: $(testpath)/test.c $(headerpath)/bitmap.h $(binpath)/bitmap.o
+	gcc $(binpath)/bitmap.o $(testpath)/test.c -o $(binpath)/bitmaptest
 
 test: $(testobjects)
 	gcc $(testobjects) $(testpath)/sfs_test.c -o $(binpath)/test
+
+############################## CLEAN ###################################
 
 hugo: clean
 	rm $(binpath)/sfs

@@ -23,8 +23,8 @@
 
 //directory constants
 #define MAX_NUM_FILES 100
-#define MAX_FILE_NAME_LENGTH 16
-#define MAX_FILE_EXTENSION_LENGTH 4
+#define MAX_FILE_NAME_LENGTH 20
+//#define MAX_FILE_EXTENSION_LENGTH 4
 
 //super block constants
 #define MAGIC 0xAABB0005

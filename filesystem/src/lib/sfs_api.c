@@ -290,12 +290,13 @@ int sfs_fopen(char* fileName){
 	printf("\n[sfs_open] Opening file [%s].\n", fileName);
 	fflush(stdout);
 
-	int inodeNum = DIR_get_inode_number(fileName);
 	int fileID;
+	int inodeNum = DIR_get_inode_number(fileName);
 
 	//if the file does not already exist
 	if(inodeNum == -1){
 		inodeNum = create_file(fileName);
+		fileID = FDT_put_file_descriptor(inodeNum);
 	}
 
 	//file already exists
@@ -304,20 +305,13 @@ int sfs_fopen(char* fileName){
 		fflush(stdout);
 
 		fileID = FDT_get_file_id(inodeNum);
-		//if file is already open, return it's current fileID
-		if(fileID != -1){
-			return fileID;
-		} 
 
-		//
-		else{
+		//if file is already open, return it's current fileID
+		if(fileID == -1){
 			load_file(inodeNum);
+			fileID = FDT_put_file_descriptor(inodeNum);
 		}
 	}
-
-	//put the inode in the file descriptor table
-	//TODO update the file write/read pointers
-	fileID = FDT_put_file_descriptor(inodeNum);
 
 	printf("[sfs_open] Opened [%s] with inodeNum [%d] and file descriptor [%d].\n", fileName, inodeNum, fileID);
 	fflush(stdout);

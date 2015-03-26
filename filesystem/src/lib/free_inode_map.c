@@ -21,6 +21,8 @@ int FIM_find_free_inode(){
 
 	printf("[FIM_find_free_inode] inodeNum [%d] is free.\n", inodeNum);
 	fflush(stdout);
+
+	return inodeNum;
 }
 
 void FIM_set_inode_used(int inodeNum){

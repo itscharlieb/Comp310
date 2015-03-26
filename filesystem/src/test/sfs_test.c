@@ -48,7 +48,7 @@ char *rand_name()
   int i;
 
   for (i = 0; i < MAX_FNAME_LENGTH; i++) {
-    if (i != 8) {
+    if (i != 16) {
       fname[i] = 'A' + (rand() % 26);
     }
     else {

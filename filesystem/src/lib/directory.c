@@ -26,16 +26,16 @@ int DIR_get_inode_number(const char* fileName){
 
 	//search through the 100 files and look for the filename
 	for(i = 0; i < MAX_NUM_FILES; i++){
-		// printf("[DIR_get_inode_number] Assessing DIR entry [%d].\n", i);
-		// fflush(stdout);
+		//printf("[DIR_get_inode_number] Assessing DIR entry [%d].\n", i);
+		//fflush(stdout);
 
 		tmp = root->directoryEntryTable[i];
 
-		if(!(tmp == NULL)){
-			printf("[DIR_get_inode_number] Dir entry [%d] is not empty.\n", i);
-			fflush(stdout);
+		if(tmp != NULL){
+			// printf("[DIR_get_inode_number] Dir entry [%d] holds [%s] with inodeNum [%d].\n", i, tmp->fileName, tmp->inodeNum);
+			// fflush(stdout);
 
-			if(strcmp(tmp->fileName, fileName) == 0){
+			if(strncmp(tmp->fileName, fileName, MAX_FILE_NAME_LENGTH) == 0){
 				return tmp->inodeNum;
 			}
 		}
@@ -74,13 +74,11 @@ void DIR_add_file(char* fileName, int inodeNum){
 	DirectoryEntry* tmp;
 
 	for(i = 0; i < MAX_NUM_FILES; i++){
-		tmp = root->directoryEntryTable[i];
-
 		//if found an available entry
-		if(tmp == NULL){
-			tmp = (DirectoryEntry*)malloc(sizeof(DirectoryEntry));
-			memcpy(tmp->fileName, fileName, (MAX_FILE_NAME_LENGTH + MAX_FILE_EXTENSION_LENGTH));
-			tmp->inodeNum = inodeNum;
+		if(root->directoryEntryTable[i] == NULL){
+			root->directoryEntryTable[i] = (DirectoryEntry*)malloc(sizeof(DirectoryEntry));
+			strncpy(root->directoryEntryTable[i]->fileName, fileName, MAX_FILE_NAME_LENGTH);
+			root->directoryEntryTable[i]->inodeNum = inodeNum;
 
 			printf("[DIR_add_file] Successfully assigned [%s] to DirectoryEntry [%d].\n", fileName, inodeNum);
 			fflush(stdout);

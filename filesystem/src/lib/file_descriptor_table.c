@@ -29,7 +29,7 @@ int FDT_get_file_id(int inodeNum){
 }
 
 int FDT_contains_file_id(int inodeNum){
-	return (fdt->fileDescriptors + inodeNum) != NULL;
+	return (fdt->fileDescriptors + inodeNum) != NULL ? 1 : 0;
 }
 
 //puts the inodeNum in the table AND returns the associated file descriptor

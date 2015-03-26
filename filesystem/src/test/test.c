@@ -1,35 +1,16 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-typedef struct {
-	char* bits;
-} Bitmap;
-
-/**
-*
-*/
-Bitmap* init_bitmap(unsigned int size){
-	int numBytes = size / 8;
-	Bitmap* bitmap = (Bitmap*)malloc(sizeof(bitmap));
-	bitmap->bits = (char*)malloc(numBytes);
-	return bitmap;
-}
-
-void set_bit(Bitmap* b, unsigned int bitNum){
-	b->bits[bitNum / 8] |= 1 << (bitNum & 7);
-}
-
-void clear_bit(Bitmap* b, unsigned int bitNum){
-	 b->bits[bitNum / 8] &= ~(1 << (bitNum & 7));
-}
-
-int get_bit(Bitmap* b, unsigned int bitNum){
-	return b->bits[bitNum / 8] & (1 << (bitNum & 7)) ? 1 : 0;
-}
+#include "../include/bitmap.h"
 
 int main(void){
-	Bitmap* b = init_bitmap(8);
-	set_bit(b, 13);
-	printf("%d\n", get_bit(b, 13));
-	printf("%d\n", get_bit(b, 12));
+	Bitmap* b = bitmap_init(64);
+	set_bit(b, 0);
+	printf("Set bit 0.\n");
+	printf("Bit 0 is [%d].\n", get_bit(b, 0));
+	printf("Bit 1 is [%d].\n", get_bit(b, 1));
+
+	printf("Free bit at index [%d].\n", find_free_bit(b));
+
+
 }

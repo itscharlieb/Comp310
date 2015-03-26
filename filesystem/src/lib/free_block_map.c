@@ -6,6 +6,7 @@
 #include "../include/free_block_map.h"
 #include <string.h>
 #include <stdlib.h>
+#include <stdio.h>
 
 //TODO size is a CONSTANT
 
@@ -18,7 +19,12 @@ void FBM_init(int numBlocks){
 }
 
 int FBM_find_free_block(){
-	return find_free_bit(fbm->freeBlockBitmap);
+	int freeBlockNum = find_free_bit(fbm->freeBlockBitmap);
+
+	printf("[FBM_find_free_block] Block [%d] is free.\n", freeBlockNum);
+	fflush(stdout);
+
+	return freeBlockNum;
 }
 
 void FBM_set_block_used(int blockNum){

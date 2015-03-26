@@ -21,25 +21,44 @@ Bitmap* bitmap_init(unsigned int size){
 }
 
 void set_bit(Bitmap* b, unsigned int bitNum){
-	b->bits[bitNum / 8] |= 1 << (bitNum & 7);
+	if(bitNum > b->size){
+		printf("[set_bit] [%d] is an invalid bitNum, this bitmap has size [%d].\n", bitNum, b->size);
+		fflush(stdout);
+		return;
+	}
+
+	int byteNum = bitNum / 8;
+	int bitPosition = bitNum % 8;
+
+	byte mask = 0x01 << bitPosition;
+	b->bits[byteNum] |= mask;
 
 	// printf("[set_bit] Set bit [%d] to used.\n", bitNum);
+	// printf("[set_bit] Updated byte state is [0x%x].\n", b->bits[byteNum]);
 	// fflush(stdout);
 }
 
 void clear_bit(Bitmap* b, unsigned int bitNum){
-	 b->bits[bitNum / 8] &= ~(1 << (bitNum & 7));
+	int byteNum = bitNum / 8;
+	int bitPosition = bitNum % 8;
+
+	byte mask = ~(0x01 << bitPosition);
+	b->bits[byteNum] &= mask;
 }
 
 int get_bit(Bitmap* b, unsigned int bitNum){
-	return b->bits[bitNum / 8] & (1 << (bitNum & 7)) ? 1 : 0;
+	int byteNum = bitNum / 8;
+	int bitPosition = bitNum % 8;
+	byte mask = (0x01 << bitPosition);
+
+	return b->bits[byteNum] & mask ? 1 : 0;
 }
 
 int find_free_bit(Bitmap* b){
 	int i, bitNum;
 	for(i = 0; i < b->size; i++){
-		if((bitNum = get_bit(b, i)) == 0){
-			return bitNum;
+		if(get_bit(b, i) == 0){
+			return i;
 		}
 	}
 }

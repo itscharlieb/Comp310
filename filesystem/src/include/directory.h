@@ -11,7 +11,7 @@
 
 //size of directory entry to disk is 22 bytes. Linked list of directory entries
 typedef struct {
-	byte fileName[MAX_FILE_NAME_LENGTH + MAX_FILE_EXTENSION_LENGTH];
+	byte fileName[MAX_FILE_NAME_LENGTH];
 	half_word inodeNum;
 } DirectoryEntry;
 
@@ -25,6 +25,7 @@ typedef struct {
 void DIR_init();
 
 //return -1 if the file does not exist
+int DIR_contains_file(const char* fileName);
 int DIR_get_inode_number(const char* fileName);
 void DIR_add_file(char* fileName, int inodeNum);
 void DIR_remove_file(char* fileName);
