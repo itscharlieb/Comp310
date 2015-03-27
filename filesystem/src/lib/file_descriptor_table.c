@@ -5,6 +5,7 @@
 
 #include "../include/file_descriptor_table.h"
 #include <stdlib.h>
+#include <stdio.h>
 
 static FileDescriptorTable* fdt;
 
@@ -29,23 +30,28 @@ int FDT_get_file_id(int inodeNum){
 }
 
 int FDT_contains_file_id(int inodeNum){
-	return (fdt->fileDescriptors + inodeNum) != NULL ? 1 : 0;
+	return fdt->fileDescriptors[inodeNum] != NULL ? 1 : 0;
 }
 
 //puts the inodeNum in the table AND returns the associated file descriptor
 int FDT_put_file_descriptor(int inodeNum){
-	FileDescriptor* fd = fdt->fileDescriptors[inodeNum];
-	fd = (FileDescriptor*)malloc(sizeof(FileDescriptor));
-	fd->readPtr = 0;
-	fd->writePtr = 0;
-	fd->inodeNum = inodeNum;
-	return inodeNum; 
+	fdt->fileDescriptors[inodeNum] = (FileDescriptor*)malloc(sizeof(FileDescriptor));
+	fdt->fileDescriptors[inodeNum]->readPtr = 0;
+	fdt->fileDescriptors[inodeNum]->writePtr = 0;
+	fdt->fileDescriptors[inodeNum]->inodeNum = inodeNum;
+
+	return inodeNum;
 }
 
 FileDescriptor* FDT_get_file_descriptor(int fileID){
-	return *(fdt->fileDescriptors + fileID);
+	return fdt->fileDescriptors[fileID];
 }
 
 void FDT_remove_file_descriptor(int fileID){
-	free(fdt->fileDescriptors + fileID);
+	FileDescriptor* fd = fdt->fileDescriptors[fileID];
+
+	printf("[FDT_remove_file_descriptor] writePtr [%d] readPtr [%d] inodeNum [%d].\n", fd->writePtr, fd->readPtr, fd->inodeNum);
+	fflush(stdout);
+
+	free(fd);
 }

@@ -21,8 +21,8 @@ void FBM_init(int numBlocks){
 int FBM_find_free_block(){
 	int freeBlockNum = find_free_bit(fbm->freeBlockBitmap);
 
-	printf("[FBM_find_free_block] Block [%d] is free.\n", freeBlockNum);
-	fflush(stdout);
+	// printf("[FBM_find_free_block] Block [%d] is free.\n", freeBlockNum);
+	// fflush(stdout);
 
 	return freeBlockNum;
 }

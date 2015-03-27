@@ -13,7 +13,7 @@
 
 //inode constants
 #define MAX_NUM_DIRECT_POINTERS 12
-#define INODE_SIZE 37
+#define INODE_SIZE 40
 #define MAX_ALLOCATED_DATA_BLOCKS 268
 
 //data block constants

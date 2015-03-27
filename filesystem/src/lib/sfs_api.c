@@ -27,6 +27,16 @@
 
 char diskName[] = "itscharlieb FS";
 
+/**********************************DUMPS**************************************/
+
+// void dump_inode(Inode* inode){
+
+// }
+
+// void dump_file_descriptor(FileDescriptor* fd){
+// 	printf("[FILE_DESCRIPTOR]\n-[Write Pointer]-[%d]\n[Read Pointer]-")
+// }
+
 /***********************************INIT**************************************/
 
 void init_free_block_map(byte* buffer){
@@ -238,6 +248,9 @@ void write_inode_to_disk(int inodeNum){
 * Loads the inode from disk and returns it.
 */
 Inode* load_inode_from_disk(int inodeNum){
+	printf("[load_inode_from_disk] Loading inode [%d].\n", inodeNum);
+	fflush(stdout);
+
 	int inodeBlockNum = get_inode_block_number(inodeNum);
 	byte* buffer = (byte*)malloc(sizeof(byte) * BLOCK_SIZE);
 
@@ -247,6 +260,8 @@ Inode* load_inode_from_disk(int inodeNum){
 
 	Inode* loadedInode = inode_from_string(inodeStartAddress);
 	free(buffer);
+
+	printf("[load_inode_from_disk] Loaded inode [%d].\n", inodeNum);
 	return loadedInode;
 }
 
@@ -297,6 +312,9 @@ int sfs_fopen(char* fileName){
 	if(inodeNum == -1){
 		inodeNum = create_file(fileName);
 		fileID = FDT_put_file_descriptor(inodeNum);
+
+		printf("[sfs_open] Opened [%s] with inodeNum [%d] and file descriptor [%d].\n", fileName, inodeNum, fileID);
+		fflush(stdout);
 	}
 
 	//file already exists
@@ -312,10 +330,6 @@ int sfs_fopen(char* fileName){
 			fileID = FDT_put_file_descriptor(inodeNum);
 		}
 	}
-
-	printf("[sfs_open] Opened [%s] with inodeNum [%d] and file descriptor [%d].\n", fileName, inodeNum, fileID);
-	fflush(stdout);
-
 	return fileID;
 }
 
@@ -323,10 +337,21 @@ int sfs_fopen(char* fileName){
 
 //TODO March 16 - should the specified file be flushed? are there residual changes from previous reads/writes?
 int sfs_fclose(int fileID){
+	printf("\n[sfs_fclose] Closing file with ID [%d].\n", fileID);
+	fflush(stdout);
+
 	//TODO check that the file is already in memory?
 	FileDescriptor* fd = FDT_get_file_descriptor(fileID);
 	int inodeNum = fd->inodeNum;
+
+	printf("[sfs_fclose] File has inodeNum [%d].\n", fd->inodeNum);
+	fflush(stdout);
+
 	FDT_remove_file_descriptor(fileID);
+
+	printf("[sfs_fclose] Removed from FDT.\n");
+	fflush(stdout);
+
 	IC_remove(inodeNum);
 }
 
@@ -409,6 +434,7 @@ int get_number_new_blocks_to_write(FileDescriptor* fd, int length, int numAlloca
 
 //executes a file write
 int execute_write(const char* buffer, int length, half_word* dataBlocks, int initialByteOffset){
+
 	char* copiedBuffer = (byte*)malloc(sizeof(byte) * length);
 	memcpy(copiedBuffer, copiedBuffer, length);
 
@@ -418,6 +444,10 @@ int execute_write(const char* buffer, int length, half_word* dataBlocks, int ini
 	//write initial partial block
 	bytesToBeWritten = min(BLOCK_SIZE - initialByteOffset, length);
 	write_partial_block(*(dataBlocks + i), tmpBufferPointer, initialByteOffset, bytesToBeWritten);
+
+	printf("[execute_write] Writing [%d] bytes to block [%d] at address offset [%d].\n", bytesToBeWritten, *(dataBlocks + i), initialByteOffset);
+	fflush(stdout);
+
 	bytesWritten += bytesToBeWritten;
 	tmpBufferPointer += bytesToBeWritten;
 	i++;
@@ -425,6 +455,10 @@ int execute_write(const char* buffer, int length, half_word* dataBlocks, int ini
 	//write series of entire blocks
 	while(length - bytesWritten > BLOCK_SIZE){
 		write_entire_block(*(dataBlocks + i), tmpBufferPointer);
+
+		printf("[execute_write] Writing [%d] bytes to block [%d] at address offset [%d].\n", 512, *(dataBlocks + i), 0);
+		fflush(stdout);
+
 		bytesWritten += BLOCK_SIZE;
 		tmpBufferPointer += BLOCK_SIZE;
 		i++;
@@ -434,14 +468,31 @@ int execute_write(const char* buffer, int length, half_word* dataBlocks, int ini
 	int numBytesRemaining = length - bytesWritten;
 	if(numBytesRemaining > 0){
 		write_partial_block(*(dataBlocks + i), tmpBufferPointer, 0, numBytesRemaining);
+
+		printf("[execute_write] Writing [%d] bytes to block [%d] at address offset [%d].\n", numBytesRemaining, *(dataBlocks + i), 0);
+		fflush(stdout);
+
+		bytesWritten += numBytesRemaining;
 	}
 
-	return 0;
+	return bytesWritten;
 }
 
 int sfs_fwrite(int fileID, const char* buffer, int length){
+	printf("\n[sfs_fwrite] Writing [%d] bytes to file [%d].\n", length, fileID);
+	fflush(stdout);
+
 	FileDescriptor* fd = FDT_get_file_descriptor(fileID);
-	Inode* inode = IC_get(fd->inodeNum);
+
+	printf("[sfs_fwrite] Received file descriptor for fileID [%d].", fileID);
+	fflush(stdout);
+
+	printf("[sfs_write] File descriptor inode id [%d].\n", fd->inodeNum);
+	fflush(stdout);
+
+	//TODO USE CACHE
+
+	Inode* inode = load_inode_from_disk(fd->inodeNum);
 
 	half_word* dataBlocks = (half_word*)malloc(sizeof(half_word) * MAX_ALLOCATED_DATA_BLOCKS); //stores the blocks that are allocated to the parameter file
 	int numAllocatedDataBlocks = get_allocated_data_block_numbers(inode, dataBlocks);
@@ -458,9 +509,16 @@ int sfs_fwrite(int fileID, const char* buffer, int length){
 		}
 	}
 
-	int errVal = execute_write(buffer, length, dataBlocks, fd->writePtr % BLOCK_SIZE);
+	int bytesWritten = execute_write(buffer, length, dataBlocks, fd->writePtr % BLOCK_SIZE);
 	free(dataBlocks);
-	return errVal;
+
+	printf("[sfs_fwrite] Current writePrt [%d]. New writePtr [%d].\n", fd->writePtr, fd->writePtr + bytesWritten);
+	fflush(stdout);
+
+	fd->writePtr += bytesWritten;
+	fd->readPtr += bytesWritten;
+
+	return bytesWritten;
 }
 
 /***************************************READ************************************************/

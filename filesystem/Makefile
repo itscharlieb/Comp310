@@ -61,8 +61,8 @@ $(binpath)/disk_emu.o: $(headerpath)/disk_emu.h $(vendorpath)/disk_emu.c
 
 ############################## TEST #####################################
 
-bitmaptest: $(testpath)/test.c $(headerpath)/bitmap.h $(binpath)/bitmap.o
-	gcc $(binpath)/bitmap.o $(testpath)/test.c -o $(binpath)/bitmaptest
+metest: $(testpath)/test.c $(binpath)/inode.o
+	gcc $(binpath)/inode.o $(testpath)/test.c -o $(binpath)/metest
 
 test: $(testobjects)
 	gcc $(testobjects) $(testpath)/sfs_test.c -o $(binpath)/test

@@ -18,6 +18,11 @@ Later on, a more sophisticated cache should be implemented
 
 void IC_init(){
 	ic = (InodeCache*)malloc(sizeof(InodeCache));
+
+	int i;
+	for(i = 0; i < MAX_NUM_FILES; i++){
+		ic->inodes[i] = NULL;
+	}
 }
 
 void IC_put(int inodeNum, Inode* i){
