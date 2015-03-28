@@ -19,200 +19,38 @@ Opened log file.
 [mksfs] Inode cache initialization successful.
 
 
-[sfs_open] Opening file [ZCPWDQKQXPSCWHUL.IGX].
-[DIR_get_inode_number] [ZCPWDQKQXPSCWHUL.IGX] does not yet exist in the root directory.
-[create_file] Creating new file [ZCPWDQKQXPSCWHUL.IGX].
+[sfs_open] Opening file [HugoEmily.txt].
+[DIR_get_inode_number] [HugoEmily.txt] does not yet exist in the root directory.
+[create_file] Creating new file [HugoEmily.txt].
 [FIM_find_free_inode] inodeNum [1] is free.
 [FIM_set_inode_used] Setting inodeNum [1] used.
-[DIR_add_file] Trying to add [ZCPWDQKQXPSCWHUL.IGX] with inodeNum [1] to directory.
-[DIR_add_file] Successfully assigned [ZCPWDQKQXPSCWHUL.IGX] to DirectoryEntry [1].
+[DIR_add_file] Trying to add [HugoEmily.txt] with inodeNum [1] to directory.
+[DIR_add_file] Successfully assigned [HugoEmily.txt] to DirectoryEntry [1].
+[create_file] Successfully created [HugoEmily.txt] allocated to inodeNum [1].
+[sfs_open] Opened [HugoEmily.txt] with inodeNum [1] and file descriptor [1].
+
+[sfs_fwrite] Writing [13] bytes to file [1].
+[sfs_fwrite] Received file descriptor for fileID [1]
+[sfs_write] File descriptor inode id [1].
 [load_inode_from_disk] Loading inode [1].
 [load_inode_from_disk] Loaded inode [1].
-[IC_put] Putting inodeNum [1] in the inode cache.
-[create_file] Successfully created [ZCPWDQKQXPSCWHUL.IGX] allocated to inodeNum [1].
-[sfs_open] Opened [ZCPWDQKQXPSCWHUL.IGX] with inodeNum [1] and file descriptor [1].
+[sfs_fwrite] [0] data blocks allocated to inode [1].
+[sfs_fwrite] [1] new blocks needed to write [13] bytes to file [1].
+[sfs_fwrite] Will use data blocks [10, ] to execute write.
 
-[sfs_open] Opening file [ZCPWDQKQXPSCWHUL.IGX].
-[sfs_open] File [ZCPWDQKQXPSCWHUL.IGX] exists in the directory.
-
-[sfs_open] Opening file [YGQWSVYZQTMRWEOB.WAR].
-[DIR_get_inode_number] [YGQWSVYZQTMRWEOB.WAR] does not yet exist in the root directory.
-[create_file] Creating new file [YGQWSVYZQTMRWEOB.WAR].
-[FIM_find_free_inode] inodeNum [2] is free.
-[FIM_set_inode_used] Setting inodeNum [2] used.
-[DIR_add_file] Trying to add [YGQWSVYZQTMRWEOB.WAR] with inodeNum [2] to directory.
-[DIR_add_file] Successfully assigned [YGQWSVYZQTMRWEOB.WAR] to DirectoryEntry [2].
-[load_inode_from_disk] Loading inode [2].
-[load_inode_from_disk] Loaded inode [2].
-[IC_put] Putting inodeNum [2] in the inode cache.
-[create_file] Successfully created [YGQWSVYZQTMRWEOB.WAR] allocated to inodeNum [2].
-[sfs_open] Opened [YGQWSVYZQTMRWEOB.WAR] with inodeNum [2] and file descriptor [2].
-
-[sfs_open] Opening file [YGQWSVYZQTMRWEOB.WAR].
-[sfs_open] File [YGQWSVYZQTMRWEOB.WAR] exists in the directory.
-Two files created with zero length:
-
-[sfs_fwrite] Writing [1208] bytes to file [1].
-[sfs_fwrite] Received file descriptor for fileID [1].[sfs_write] File descriptor inode id [1].
+[write_partial_block] Value in buffer [text to write].
+[execute_write] Writing [13] bytes to block [10] at address offset [0].
+[sfs_fwrite] Current writePrt [0]. New writePtr [13].
 [load_inode_from_disk] Loading inode [1].
 [load_inode_from_disk] Loaded inode [1].
-[execute_write] Writing [512] bytes to block [10] at address offset [0].
-[execute_write] Writing [512] bytes to block [11] at address offset [0].
-[execute_write] Writing [184] bytes to block [12] at address offset [0].
-[sfs_fwrite] Current writePrt [0]. New writePtr [1208].
+[sfs_read] Dumping inode values.
 
-[sfs_fwrite] Writing [870] bytes to file [1].
-[sfs_fwrite] Received file descriptor for fileID [1].[sfs_write] File descriptor inode id [1].
-[load_inode_from_disk] Loading inode [1].
-[load_inode_from_disk] Loaded inode [1].
-[execute_write] Writing [328] bytes to block [13] at address offset [184].
-[execute_write] Writing [512] bytes to block [14] at address offset [0].
-[execute_write] Writing [30] bytes to block [15] at address offset [0].
-[sfs_fwrite] Current writePrt [1208]. New writePtr [2078].
+------------------[dump_inode]--------------------
+size = [0].
+direct block numbers = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, ].
 
-[sfs_fwrite] Writing [9539] bytes to file [1].
-[sfs_fwrite] Received file descriptor for fileID [1].[sfs_write] File descriptor inode id [1].
-[load_inode_from_disk] Loading inode [1].
-[load_inode_from_disk] Loaded inode [1].
-[execute_write] Writing [482] bytes to block [18] at address offset [30].
-[execute_write] Writing [512] bytes to block [19] at address offset [0].
-[execute_write] Writing [512] bytes to block [20] at address offset [0].
-[execute_write] Writing [512] bytes to block [21] at address offset [0].
-[execute_write] Writing [512] bytes to block [22] at address offset [0].
-[execute_write] Writing [512] bytes to block [23] at address offset [0].
-[execute_write] Writing [512] bytes to block [24] at address offset [0].
-[execute_write] Writing [512] bytes to block [25] at address offset [0].
-[execute_write] Writing [512] bytes to block [26] at address offset [0].
-[execute_write] Writing [512] bytes to block [27] at address offset [0].
-[execute_write] Writing [512] bytes to block [28] at address offset [0].
-[execute_write] Writing [512] bytes to block [29] at address offset [0].
-[execute_write] Writing [512] bytes to block [30] at address offset [0].
-[execute_write] Writing [512] bytes to block [31] at address offset [0].
-[execute_write] Writing [512] bytes to block [32] at address offset [0].
-[execute_write] Writing [512] bytes to block [33] at address offset [0].
-[execute_write] Writing [512] bytes to block [34] at address offset [0].
-[execute_write] Writing [512] bytes to block [35] at address offset [0].
-[execute_write] Writing [353] bytes to block [36] at address offset [0].
-[sfs_fwrite] Current writePrt [2078]. New writePtr [11617].
+[TEST FILE] Wrote [13] bytes and read [-13] bytes.
 
-[sfs_fwrite] Writing [43] bytes to file [1].
-[sfs_fwrite] Received file descriptor for fileID [1].[sfs_write] File descriptor inode id [1].
-[load_inode_from_disk] Loading inode [1].
-[load_inode_from_disk] Loaded inode [1].
-[execute_write] Writing [43] bytes to block [41] at address offset [353].
-[sfs_fwrite] Current writePrt [11617]. New writePtr [11660].
-
-[sfs_fwrite] Writing [37] bytes to file [1].
-[sfs_fwrite] Received file descriptor for fileID [1].[sfs_write] File descriptor inode id [1].
-[load_inode_from_disk] Loading inode [1].
-[load_inode_from_disk] Loaded inode [1].
-[execute_write] Writing [37] bytes to block [64] at address offset [396].
-[sfs_fwrite] Current writePrt [11660]. New writePtr [11697].
-
-[sfs_fwrite] Writing [118] bytes to file [1].
-[sfs_fwrite] Received file descriptor for fileID [1].[sfs_write] File descriptor inode id [1].
-[load_inode_from_disk] Loading inode [1].
-[load_inode_from_disk] Loaded inode [1].
-[execute_write] Writing [79] bytes to block [87] at address offset [433].
-[execute_write] Writing [39] bytes to block [88] at address offset [0].
-[sfs_fwrite] Current writePrt [11697]. New writePtr [11815].
-
-[sfs_fwrite] Writing [3] bytes to file [1].
-[sfs_fwrite] Received file descriptor for fileID [1].[sfs_write] File descriptor inode id [1].
-[load_inode_from_disk] Loading inode [1].
-[load_inode_from_disk] Loaded inode [1].
-[execute_write] Writing [3] bytes to block [111] at address offset [39].
-[sfs_fwrite] Current writePrt [11815]. New writePtr [11818].
-
-[sfs_fwrite] Writing [7486] bytes to file [2].
-[sfs_fwrite] Received file descriptor for fileID [2].[sfs_write] File descriptor inode id [2].
-[load_inode_from_disk] Loading inode [2].
-[load_inode_from_disk] Loaded inode [2].
-[execute_write] Writing [512] bytes to block [135] at address offset [0].
-[execute_write] Writing [512] bytes to block [136] at address offset [0].
-[execute_write] Writing [512] bytes to block [137] at address offset [0].
-[execute_write] Writing [512] bytes to block [138] at address offset [0].
-[execute_write] Writing [512] bytes to block [139] at address offset [0].
-[execute_write] Writing [512] bytes to block [140] at address offset [0].
-[execute_write] Writing [512] bytes to block [141] at address offset [0].
-[execute_write] Writing [512] bytes to block [142] at address offset [0].
-[execute_write] Writing [512] bytes to block [143] at address offset [0].
-[execute_write] Writing [512] bytes to block [144] at address offset [0].
-[execute_write] Writing [512] bytes to block [145] at address offset [0].
-[execute_write] Writing [512] bytes to block [146] at address offset [0].
-[execute_write] Writing [512] bytes to block [147] at address offset [0].
-[execute_write] Writing [512] bytes to block [148] at address offset [0].
-[execute_write] Writing [318] bytes to block [149] at address offset [0].
-[sfs_fwrite] Current writePrt [0]. New writePtr [7486].
-
-[sfs_fwrite] Writing [3452] bytes to file [2].
-[sfs_fwrite] Received file descriptor for fileID [2].[sfs_write] File descriptor inode id [2].
-[load_inode_from_disk] Loading inode [2].
-[load_inode_from_disk] Loaded inode [2].
-[execute_write] Writing [194] bytes to block [150] at address offset [318].
-[execute_write] Writing [512] bytes to block [151] at address offset [0].
-[execute_write] Writing [512] bytes to block [152] at address offset [0].
-[execute_write] Writing [512] bytes to block [153] at address offset [0].
-[execute_write] Writing [512] bytes to block [154] at address offset [0].
-[execute_write] Writing [512] bytes to block [155] at address offset [0].
-[execute_write] Writing [512] bytes to block [156] at address offset [0].
-[execute_write] Writing [186] bytes to block [157] at address offset [0].
-[sfs_fwrite] Current writePrt [7486]. New writePtr [10938].
-
-[sfs_fwrite] Writing [52] bytes to file [2].
-[sfs_fwrite] Received file descriptor for fileID [2].[sfs_write] File descriptor inode id [2].
-[load_inode_from_disk] Loading inode [2].
-[load_inode_from_disk] Loaded inode [2].
-[execute_write] Writing [52] bytes to block [172] at address offset [186].
-[sfs_fwrite] Current writePrt [10938]. New writePtr [10990].
-
-[sfs_fwrite] Writing [251] bytes to file [2].
-[sfs_fwrite] Received file descriptor for fileID [2].[sfs_write] File descriptor inode id [2].
-[load_inode_from_disk] Loading inode [2].
-[load_inode_from_disk] Loaded inode [2].
-[execute_write] Writing [251] bytes to block [194] at address offset [238].
-[sfs_fwrite] Current writePrt [10990]. New writePtr [11241].
-
-[sfs_fwrite] Writing [9] bytes to file [2].
-[sfs_fwrite] Received file descriptor for fileID [2].[sfs_write] File descriptor inode id [2].
-[load_inode_from_disk] Loading inode [2].
-[load_inode_from_disk] Loaded inode [2].
-[execute_write] Writing [9] bytes to block [216] at address offset [489].
-[sfs_fwrite] Current writePrt [11241]. New writePtr [11250].
-
-[sfs_fwrite] Writing [10] bytes to file [2].
-[sfs_fwrite] Received file descriptor for fileID [2].[sfs_write] File descriptor inode id [2].
-[load_inode_from_disk] Loading inode [2].
-[load_inode_from_disk] Loaded inode [2].
-[execute_write] Writing [10] bytes to block [238] at address offset [498].
-[sfs_fwrite] Current writePrt [11250]. New writePtr [11260].
-
-[sfs_fwrite] Writing [4] bytes to file [2].
-[sfs_fwrite] Received file descriptor for fileID [2].[sfs_write] File descriptor inode id [2].
-[load_inode_from_disk] Loading inode [2].
-[load_inode_from_disk] Loaded inode [2].
-[execute_write] Writing [4] bytes to block [260] at address offset [508].
-[sfs_fwrite] Current writePrt [11260]. New writePtr [11264].
-
-[sfs_fwrite] Writing [18] bytes to file [2].
-[sfs_fwrite] Received file descriptor for fileID [2].[sfs_write] File descriptor inode id [2].
-[load_inode_from_disk] Loading inode [2].
-[load_inode_from_disk] Loaded inode [2].
-[execute_write] Writing [18] bytes to block [283] at address offset [0].
-[sfs_fwrite] Current writePrt [11264]. New writePtr [11282].
-
-[sfs_fwrite] Writing [2] bytes to file [2].
-[sfs_fwrite] Received file descriptor for fileID [2].[sfs_write] File descriptor inode id [2].
-[load_inode_from_disk] Loading inode [2].
-[load_inode_from_disk] Loaded inode [2].
-[execute_write] Writing [2] bytes to block [306] at address offset [18].
-[sfs_fwrite] Current writePrt [11282]. New writePtr [11284].
-
-[sfs_fclose] Closing file with ID [2].
-[sfs_fclose] File has inodeNum [2].
-[FDT_remove_file_descriptor] writePtr [11284] readPtr [11284] inodeNum [2].
+[sfs_fclose] Closing file with ID [1].
+[FDT_remove_file_descriptor] writePtr [13] readPtr [13] inodeNum [1].
 [sfs_fclose] Removed from FDT.
-
-[sfs_fclose] Closing file with ID [2].
-[sfs_fclose] File has inodeNum [2].
-[FDT_remove_file_descriptor] writePtr [0] readPtr [16855760] inodeNum [2].

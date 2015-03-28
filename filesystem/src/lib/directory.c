@@ -100,7 +100,9 @@ void DIR_remove_file(char* fileName){
 
 		if(tmp != NULL){
 			if(strcmp(tmp->fileName, fileName) == 0){
+				//free space and set pointer to null
 				free(tmp);
+				root->directoryEntryTable[i] = NULL;
 				break;
 			}
 		}

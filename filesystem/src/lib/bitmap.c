@@ -17,6 +17,12 @@ Bitmap* bitmap_init(unsigned int size){
 	bitmap->bits = (byte*)malloc(numBytes);
 	bitmap->size = size;
 
+	//clear all bytes in the bitmap
+	int i;
+	for(i = 0; i < (size / 8); i++){
+		*(bitmap->bits + i) = 0;
+	}
+
 	return bitmap;
 }
 
@@ -61,4 +67,5 @@ int find_free_bit(Bitmap* b){
 			return i;
 		}
 	}
+	return -1; //failed to find free bit
 }

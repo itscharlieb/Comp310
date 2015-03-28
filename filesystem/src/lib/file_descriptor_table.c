@@ -49,6 +49,7 @@ FileDescriptor* FDT_get_file_descriptor(int fileID){
 
 void FDT_remove_file_descriptor(int fileID){
 	FileDescriptor* fd = fdt->fileDescriptors[fileID];
+	fdt->fileDescriptors[fileID] = NULL;
 
 	printf("[FDT_remove_file_descriptor] writePtr [%d] readPtr [%d] inodeNum [%d].\n", fd->writePtr, fd->readPtr, fd->inodeNum);
 	fflush(stdout);

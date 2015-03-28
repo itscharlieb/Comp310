@@ -61,8 +61,8 @@ $(binpath)/disk_emu.o: $(headerpath)/disk_emu.h $(vendorpath)/disk_emu.c
 
 ############################## TEST #####################################
 
-metest: $(testpath)/test.c $(binpath)/inode.o
-	gcc $(binpath)/inode.o $(testpath)/test.c -o $(binpath)/metest
+mytest: $(testobjects)
+	gcc $(testobjects) $(testpath)/my_test.c -o $(binpath)/mytest
 
 test: $(testobjects)
 	gcc $(testobjects) $(testpath)/sfs_test.c -o $(binpath)/test
@@ -70,7 +70,7 @@ test: $(testobjects)
 ############################## CLEAN ###################################
 
 hugo: clean
-	rm $(binpath)/sfs
+	rm $(binpath)/*
 
 clean: 
 	rm $(binpath)/*.o
