@@ -17,10 +17,10 @@ typedef struct {
 } TestStruct;
 
 void print_test_struct(TestStruct* ts){
-	printf("\n--------------[print_test_struct]-------------\n");
+	printf("\n------------[print_test_struct]------------\n");
 	printf("anInt = [%d].\n", ts->anInt);
 	printf("charArray = [%s].\n", ts->charArray);
-	printf("-----------------------------------------------\n");
+	printf("-------------------------------------------\n");
 	fflush(stdout);
 }
 
@@ -28,23 +28,40 @@ int main(void){
 	printf("\n[main] Size of TestStruct = [%d].\n", (int)sizeof(TestStruct));
 	my_mall_info();
 
-	TestStruct* ts = (TestStruct*)my_malloc(sizeof(TestStruct));
+	TestStruct* ts1 = (TestStruct*)my_malloc(sizeof(TestStruct));
+	void* firstMallocAddress = ts1;
+
+	my_mall_info();
 	
 	printf("[main] Assigning int field in the test struct.\n");
 	fflush(stdout);
-	ts->anInt = 4;
+	ts1->anInt = 4;
 
 	printf("[main] Copying characters into the test struct.\n");
 	fflush(stdout);
-	strncpy(ts->charArray, testString, strlen(testString));
+	strncpy(ts1->charArray, testString, strlen(testString));
 
-	print_test_struct(ts);
+	print_test_struct(ts1);
 
 	my_mall_info();
 
 	printf("[main] Freeing test struct memory from heap.\n");
 	fflush(stdout);
-	my_free(ts);
+	my_free(ts1);
+
+	my_mall_info();
+
+	printf("[main] Reallocating memory for a test struct. Both structs should have the same address in the heap.\n");
+	fflush(stdout);
+
+	TestStruct* ts2 = (TestStruct*)my_malloc(sizeof(TestStruct));
+
+	printf("[main] The two test structs have the same heap adderss? ");
+	printf((ts1 == firstMallocAddress) ? "[TRUE]\n" : "[FALSE]\n");
+	if(ts1 != firstMallocAddress){
+		printf("[main] ts1 has address [%d] and ts2 has address [%d].\n", ts1, firstMallocAddress);
+	}
+	fflush(stdout);
 
 	my_mall_info();
 }
