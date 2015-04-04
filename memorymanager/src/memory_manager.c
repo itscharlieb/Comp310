@@ -130,23 +130,15 @@ void set_previous_free_block(void* block, void* previousBlock){
 /**********************************************************************************/
 
 void* best_fit(int size){
-	printf("[best_fit] Searching for a block with size <= [%d] bytes.\n", size);
-
 	int bestFitSize = MAX_HEAP_SIZE;
 	void* bestFitBlock = NULL;
 	void* tmpBlock = headFreeBlock;
 	while(tmpBlock != NULL){
-		printf("Evaluating free block at address [%d].\n", tmpBlock);
-		fflush(stdout);
-
 		int blockObjectSize = block_object_size(tmpBlock);
 		if(blockObjectSize >= size && blockObjectSize < bestFitSize){
 			bestFitBlock = tmpBlock;
 			bestFitSize = blockObjectSize;
-
-			printf("[best_fit] Found a sufficient block at address [%d] with size [%d].\n", bestFitBlock, bestFitSize);
-			fflush(stdout);
-		}
+		}		}
 
 		tmpBlock = next_free_block(tmpBlock);
 	}
@@ -154,12 +146,9 @@ void* best_fit(int size){
 }
 
 void* first_fit(int size){
-	printf("[best_fit] Searching for a block with size <= [%d] bytes.\n", size);
-
 	void* tmpBlock = headFreeBlock;
 	while(tmpBlock != NULL){
 		if(block_object_size(tmpBlock) >= size){
-			printf("[best_fit] Found a sufficient block at address [%d] with size [%d].\n", (int)tmpBlock, *(int*)(tmpBlock));
 			return tmpBlock;
 		}
 
@@ -169,18 +158,12 @@ void* first_fit(int size){
 }
 
 void* allocate_new_block(int size){
-	printf("[allocate_new_block] No sufficient free block found. Allocating [%d] bytes in the heap.\n", size);
-	fflush(stdout);
-
 	void* newBlock = sbrk(size + MY_MALLOC_TAG_SIZE);
 	set_block_size(newBlock, size);
 	set_block_free(newBlock, FALSE);
 
 	numAllocatedBytes += size;
 	numBlocks ++;
-
-	printf("New block dump:\n");
-	dump_block(newBlock);
 
 	return (void*)(newBlock + OBJECT_FIELD_OFFSET);
 }
@@ -192,9 +175,6 @@ void* my_malloc(int size){
 		programEnd = sbrk(0);
 		heapIsInitialized = TRUE;
 	}
-
-	printf("[my_malloc] Mallocing a block of size [%d].\n", size);
-
 	void* recyclyedFreeBlock;
 	if(myMallocPolicy == BEST_FIT){
 		if((recyclyedFreeBlock = best_fit(size)) == NULL){
@@ -248,32 +228,9 @@ void* morph_freed_block_with_neighbors(void* freedBlock){
 	void* morphedBlock = freedBlock;
 	void* previousBlock = previous_block(freedBlock);
 	void* nextBlock = next_block(freedBlock);
-	printf("Morphing block at address [%d] with size [%d].\n", morphedBlock, block_object_size(morphedBlock));
-
-	if(previousBlock != NULL){
-		printf("Dumping previous block.\n");
-		dump_block(previousBlock);
-	}
-
-	printf("Dumping freed block.\n");
-	dump_block(freedBlock);
-
-	if(nextBlock != NULL){
-		printf("Dumping next block.\n");
-		dump_block(nextBlock);
-	}
-
 	//if(previousBlock != NULL && block_is_free(previousBlock)){
 	if(previousBlock != NULL){
-		printf("Previous block exists.\n");
-		fflush(stdout);
 		if(block_is_free(previousBlock)){
-			printf("Previous block is free and morphable.\n");
-			fflush(stdout);
-
-			printf("Previous block size field = [%d]. Previous block free field = [%d].\n", block_object_size(previousBlock), block_is_free(previousBlock));
-			fflush(stdout);
-
 			//update statistics counters
 			numBlocks --;
 			numFreeBlocks --;
@@ -282,35 +239,18 @@ void* morph_freed_block_with_neighbors(void* freedBlock){
 
 			//|SIZE|TRUE|PREVIOUS|SIZE|TRUE|-|SIZE|TRUE|FREED|SIZE|TRUE|-|SIZE|T/F|NEXT|SIZE|T/F|
 			int morphedBlockSize = block_object_size(previousBlock) + block_object_size(freedBlock) + MY_MALLOC_TAG_SIZE;
-			printf("Morphed block size after morphring with previous block = [%d].\n", morphedBlockSize);
-			fflush(stdout);
-
 			set_block_size(morphedBlock, morphedBlockSize);
 			//|SIZE|TRUE|-------------MORPHED----------------|SIZE|TRUE|-|SIZE|T/F|NEXT|SIZE|T/F|
 		}
 	}
-	
-	printf("Evaluating next block for morphability.\n");
-	fflush(stdout);
+
 	if(nextBlock != NULL){
-		printf("Next block exists.\n");
-		fflush(stdout);
-
-		printf("Next block size field = [%d]. Next block free field = [%d].\n", block_object_size(nextBlock), block_is_free(nextBlock));
-		fflush(stdout);
-
 		if(block_is_free(nextBlock)){
-			printf("Next block is free and morphable.\n");
-			fflush(stdout);
 			//update statistics counters
 			numBlocks --;
 			numFreeBlocks --;
-
 			//|SIZE|TRUE|MORPHED|TRUE|FREE|-|SIZE|TRUE|NEXT|SIZE|TRUE|
-			int morphedBlockSize = block_object_size(morphedBlock) + block_object_size(nextBlock) + MY_MALLOC_TAG_SIZE;
-			printf("Morhed block size after morphing with next block = [%d].\n", morphedBlockSize);
-			fflush(stdout);
-
+			int morphedBlockSize = block_object_size(morphedBlock) + block_object_size(nextBlock) + MY_MALLOC_TAG_SIZE);
 			set_block_size(morphedBlock, morphedBlockSize);
 			//|SIZE|TRUE|------------MORPHED---------------|SIZE|TRUE|
 		}
@@ -325,13 +265,7 @@ void my_free(void* freedObject){
 	set_block_free(freedBlock, TRUE);
 	numFreeBlocks ++; //statistics counter
 
-	printf("[my_free] Morphing freedBlock with its neighbors, if necessary.\n");
-	fflush(stdout);
-
 	freedBlock = morph_freed_block_with_neighbors(freedBlock);
-
-	printf("[my_free] Morph successful.\n");
-	fflush(stdout);
 
 	if(headFreeBlock == NULL){
 		headFreeBlock = freedBlock;
@@ -340,13 +274,8 @@ void my_free(void* freedObject){
 	}
 
 	else{
-		printf("[my_free] Searching for previous free block.\n");
-
 		void* previousFreeBlock = find_previous_free_block(freedBlock);
-		printf("[my_free] Found previous free block.\n");
-
 		void* nextFreeBlock = find_next_free_block(freedBlock);
-		printf("[my_free] Found next free block.\n");
 
 		//both of the neighboring free blocks can be null
 		set_previous_free_block(freedBlock, previousFreeBlock);
