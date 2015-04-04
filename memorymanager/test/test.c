@@ -24,10 +24,7 @@ void print_test_struct(TestStruct* ts){
 	fflush(stdout);
 }
 
-int main(void){
-	printf("\n[main] Size of TestStruct = [%d].\n", (int)sizeof(TestStruct));
-	my_mall_info();
-
+void test_general_functionality(){
 	TestStruct* ts1 = (TestStruct*)my_malloc(sizeof(TestStruct));
 	void* firstMallocAddress = ts1;
 
@@ -64,4 +61,38 @@ int main(void){
 	fflush(stdout);
 
 	my_mall_info();
+}
+
+void test_block_morphing(){
+	printf("[test_block_morphing] Creating three test structs.\n");
+	TestStruct* ts1 = (TestStruct*)my_malloc(sizeof(TestStruct));
+	TestStruct* ts2 = (TestStruct*)my_malloc(sizeof(TestStruct));
+	TestStruct* ts3 = (TestStruct*)my_malloc(sizeof(TestStruct));
+	TestStruct* ts4 = (TestStruct*)my_malloc(sizeof(TestStruct));
+
+	printf("[test_block_morphing] ts1 address = [%d]. ts2 address = [%d]. ts3 address = [%d].\n", ts1, ts2, ts3);
+	my_mall_info();
+
+	printf("[test_block_morphing] Freeing ts1.\n");
+	fflush(stdout);
+	my_free(ts1);
+	my_mall_info();
+
+	printf("[test_block_morphing] Freeing ts3.\n");
+	fflush(stdout);
+	my_free(ts3);
+	my_mall_info();
+
+	printf("[test_block_morphing] Freeing ts2. All 3 blocks should morph into one.\n");
+	my_free(ts2);
+	my_mall_info();
+}
+
+int main(void){
+	printf("\n[main] Size of TestStruct = [%d].\n", (int)sizeof(TestStruct));
+	my_mall_info();
+
+	//test_general_functionality();
+	test_block_morphing();
+
 }
