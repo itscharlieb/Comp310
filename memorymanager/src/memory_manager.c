@@ -108,7 +108,7 @@ void* previous_free_block(void* block){
 }
 
 /*********************************BLOCK SETTERS************************************/
-void set_block_size(void* block, int size){
+void set_block_object_size(void* block, int size){
 	*(int*)(block + SIZE_FIELD_OFFSET) = size;
 	*(int*)(block + size + MY_MALLOC_TAG_SIZE + PREVIOUS_BLOCK_SIZE_FIELD_OFFSET) = size; //TODO refactor
 }
@@ -138,7 +138,7 @@ void* best_fit(int size){
 		if(blockObjectSize >= size && blockObjectSize < bestFitSize){
 			bestFitBlock = tmpBlock;
 			bestFitSize = blockObjectSize;
-		}		}
+		}
 
 		tmpBlock = next_free_block(tmpBlock);
 	}
@@ -159,7 +159,7 @@ void* first_fit(int size){
 
 void* allocate_new_block(int size){
 	void* newBlock = sbrk(size + MY_MALLOC_TAG_SIZE);
-	set_block_size(newBlock, size);
+	set_block_object_size(newBlock, size);
 	set_block_free(newBlock, FALSE);
 
 	numAllocatedBytes += size;
@@ -188,7 +188,7 @@ void* my_malloc(int size){
 	}
 	//reassign values of recycled block
 	//TODO deal with fragmentation
-	set_block_size(recyclyedFreeBlock, size);
+	set_block_object_size(recyclyedFreeBlock, size);
 	set_block_free(recyclyedFreeBlock, FALSE);
 	return (void*)(recyclyedFreeBlock + OBJECT_FIELD_OFFSET);
 }
@@ -223,12 +223,21 @@ void* find_previous_free_block(void* block){
 	return tmpBlock;
 }
 
+//morphs two neighboring blocks into one if both are free. Deals with updating pointers of blocks in the free block list
+void* morph_neighboring_blocks(void* left, void* right){
+	if(block_is_free(left) && block_is_free(right)){
+		numBlocks --;
+		numFreeBlocks --;
+
+	}
+}
+
 //combines the given free block with it's neighbors if either are free. Returns the address of the new free block (it only changes if the previous block is free)
 void* morph_freed_block_with_neighbors(void* freedBlock){
-	void* morphedBlock = freedBlock;
 	void* previousBlock = previous_block(freedBlock);
-	void* nextBlock = next_block(freedBlock);
-	//if(previousBlock != NULL && block_is_free(previousBlock)){
+	void* morphedBlock = freedBlock;
+
+	//first, morph with previous block
 	if(previousBlock != NULL){
 		if(block_is_free(previousBlock)){
 			//update statistics counters
@@ -239,22 +248,32 @@ void* morph_freed_block_with_neighbors(void* freedBlock){
 
 			//|SIZE|TRUE|PREVIOUS|SIZE|TRUE|-|SIZE|TRUE|FREED|SIZE|TRUE|-|SIZE|T/F|NEXT|SIZE|T/F|
 			int morphedBlockSize = block_object_size(previousBlock) + block_object_size(freedBlock) + MY_MALLOC_TAG_SIZE;
-			set_block_size(morphedBlock, morphedBlockSize);
+			printf("morphedBlockSize after morph with previous = [%d].\n", morphedBlockSize);
+			set_block_object_size(morphedBlock, (morphedBlockSize - MY_MALLOC_TAG_SIZE));
 			//|SIZE|TRUE|-------------MORPHED----------------|SIZE|TRUE|-|SIZE|T/F|NEXT|SIZE|T/F|
 		}
 	}
 
+	printf("Dumping morphed block after morph with previous.\n");
+	dump_block(morphedBlock);
+
+	//then morph with next block, making 3 block morph if necessary
+	void* nextBlock = next_block(morphedBlock);
 	if(nextBlock != NULL){
 		if(block_is_free(nextBlock)){
 			//update statistics counters
 			numBlocks --;
 			numFreeBlocks --;
 			//|SIZE|TRUE|MORPHED|TRUE|FREE|-|SIZE|TRUE|NEXT|SIZE|TRUE|
-			int morphedBlockSize = block_object_size(morphedBlock) + block_object_size(nextBlock) + MY_MALLOC_TAG_SIZE);
-			set_block_size(morphedBlock, morphedBlockSize);
+			int morphedBlockSize = block_object_size(morphedBlock) + block_object_size(nextBlock) + MY_MALLOC_TAG_SIZE;
+			printf("morphedBlockSize after morph with next = [%d].\n", morphedBlockSize);
+			set_block_object_size(morphedBlock, (morphedBlockSize - MY_MALLOC_TAG_SIZE));
 			//|SIZE|TRUE|------------MORPHED---------------|SIZE|TRUE|
 		}
 	}
+
+	printf("Dumping morphed block after morph with next.\n");
+	dump_block(morphedBlock);
 
 	return morphedBlock;
 }
@@ -291,6 +310,7 @@ void my_free(void* freedObject){
 
 	//update heap stats
 	int freedBlockObjectSize = block_object_size(freedBlock);
+	printf("Freed block object size after morphing = [%d].\n", freedBlockObjectSize);
 
 	numAllocatedBytes -= freedBlockObjectSize;
 	numFreeBytes += freedBlockObjectSize;
