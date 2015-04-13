@@ -64,28 +64,44 @@ void test_general_functionality(){
 }
 
 void test_block_morphing(){
-	printf("[test_block_morphing] Creating four test structs.\n");
+	printf("[test_block_morphing] Creating test structs.\n");
 	TestStruct* ts1 = (TestStruct*)my_malloc(sizeof(TestStruct));
 	TestStruct* ts2 = (TestStruct*)my_malloc(sizeof(TestStruct));
 	TestStruct* ts3 = (TestStruct*)my_malloc(sizeof(TestStruct));
 	TestStruct* ts4 = (TestStruct*)my_malloc(sizeof(TestStruct));
+	TestStruct* ts5 = (TestStruct*)my_malloc(sizeof(TestStruct));
+	TestStruct* ts6 = (TestStruct*)my_malloc(sizeof(TestStruct));
+	TestStruct* ts7 = (TestStruct*)my_malloc(sizeof(TestStruct));
 
-	printf("[test_block_morphing] ts1 address = [%p]. ts2 address = [%p]. ts3 address = [%p]. ts4 address = [%p].\n", ts1, ts2, ts3, ts4);
 	my_mall_info();
 
-	// printf("[test_block_morphing] Freeing ts1.\n");
-	// fflush(stdout);
-	// my_free(ts1);
-	// my_mall_info();
+	printf("[test_block_morphing] Freeing ts1.\n");
+	fflush(stdout);
+	my_free(ts1);
+	my_mall_info();
+
+	printf("[test_block_morphing] Freeing ts5.\n");
+	my_free(ts5);
+	my_mall_info();
+
+	printf("[test_block_morphing] Freeing ts7.\n");
+	my_free(ts7);
+	my_mall_info();
 
 	printf("[test_block_morphing] Freeing ts3.\n");
 	fflush(stdout);
 	my_free(ts3);
 	my_mall_info();
 
-	printf("[test_block_morphing] Freeing ts2. All 3 blocks should morph into one.\n");
+	printf("[test_block_morphing] Freeing ts2, ts6, ts4 respectively.\n");
 	my_free(ts2);
+	my_free(ts6);
+	my_free(ts4);
 	my_mall_info();
+
+	// printf("[test_block_morphing] Freeing ts2. All 3 blocks should morph into one.\n");
+	// my_free(ts2);
+	// my_mall_info();
 }
 
 int main(void){

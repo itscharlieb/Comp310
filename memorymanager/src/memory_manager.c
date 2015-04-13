@@ -46,7 +46,6 @@ If they are free, blocks have the following structure: (which breaks if the user
 #define FIRST_FIT 1
 #define BEST_FIT 0
 
-extern char* myMallocError;
 int myMallocPolicy = BEST_FIT;
 unsigned int programBreak;
 void* programEnd;
@@ -63,6 +62,7 @@ void dump_heap();
 void dump_block(void* block);
 
 /**********************************BLOCK GETTERS**********************************/
+
 //block helper functions for readability
 int block_object_size(void* block){
 	return *(int*)(block + SIZE_FIELD_OFFSET);
@@ -100,11 +100,9 @@ void* previous_free_block(void* block){
 }
 
 /*********************************BLOCK SETTERS************************************/
+
 void set_block_object_size(void* block, int size){
 	*(int*)(block + SIZE_FIELD_OFFSET) = size;
-
-	int* backSizeFieldAddress = block + size + MY_MALLOC_TAG_SIZE - PREVIOUS_BLOCK_SIZE_FIELD_OFFSET;
-	printf("[set_block_size] Back size field address = [%p].\n", backSizeFieldAddress);	
 	*(int*)(block + size + MY_MALLOC_TAG_SIZE - PREVIOUS_BLOCK_SIZE_FIELD_OFFSET) = size; //TODO refactor
 }
 
@@ -124,13 +122,13 @@ void set_previous_free_block(void* block, void* previousBlock){
 
 /**********************************************************************************/
 
-void* best_fit(int size){
+void* best_fit(int requestedSize){
 	int bestFitSize = MAX_HEAP_SIZE;
 	void* bestFitBlock = NULL;
 	void* tmpBlock = headFreeBlock;
 	while(tmpBlock != NULL){
 		int blockObjectSize = block_object_size(tmpBlock);
-		if(blockObjectSize >= size && blockObjectSize < bestFitSize){
+		if(blockObjectSize >= requestedSize && blockObjectSize < bestFitSize){
 			bestFitBlock = tmpBlock;
 			bestFitSize = blockObjectSize;
 		}
@@ -201,12 +199,10 @@ void* find_next_free_block(void* block){
 		return NULL;
 	}
 
-	void* tmpBlock = headFreeBlock;
-	while(tmpBlock != NULL && tmpBlock < block){
-		tmpBlock = next_free_block(tmpBlock);
+	void* tmpBlock = next_block(block);
+	while(tmpBlock != NULL && !(block_is_free(tmpBlock))){
+		tmpBlock = next_block(tmpBlock);
 	}
-
-	//printf("[find_next_free_block] Address of next = [%d].\n", tmpBlock);
 
 	return tmpBlock;
 }
@@ -217,14 +213,10 @@ void* find_previous_free_block(void* block){
 		return NULL;
 	}
 
-	void* tmpBlock = headFreeBlock;
-	void* tmpNextBlock = next_free_block(headFreeBlock);
-	while(tmpNextBlock != NULL && tmpNextBlock < block){
-		tmpBlock = tmpNextBlock;
-		tmpNextBlock = next_free_block(tmpNextBlock);
+	void* tmpBlock = previous_block(block);
+	while(tmpBlock != NULL && !(block_is_free(tmpBlock))){
+		tmpBlock = previous_block(tmpBlock);
 	}
-
-	//printf("[find_previous_free_block] Address of prev = [%d].\n", tmpBlock);
 
 	return tmpBlock;
 }
@@ -272,6 +264,11 @@ void my_free(void* freedObject){
 	dump_heap();
 
 	void* freedBlock = (void*)(freedObject - OBJECT_FIELD_OFFSET);
+	if(block_is_free(freedBlock)){
+		//my_malloc_error = "No freeing of already freed blocks in my program!";
+		return;
+	}
+
 	numUsedBytes -= block_object_size(freedBlock);
 	numFreeBytes += block_object_size(freedBlock);
 
