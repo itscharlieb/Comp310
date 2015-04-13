@@ -56,7 +56,7 @@ void test_general_functionality(){
 	printf("[main] The two test structs have the same heap adderss? ");
 	printf((ts1 == firstMallocAddress) ? "[TRUE]\n" : "[FALSE]\n");
 	if(ts1 != firstMallocAddress){
-		printf("[main] ts1 has address [%d] and ts2 has address [%d].\n", ts1, firstMallocAddress);
+		printf("[main] ts1 has address [%p] and ts2 has address [%p].\n", ts1, firstMallocAddress);
 	}
 	fflush(stdout);
 
@@ -70,22 +70,22 @@ void test_block_morphing(){
 	TestStruct* ts3 = (TestStruct*)my_malloc(sizeof(TestStruct));
 	TestStruct* ts4 = (TestStruct*)my_malloc(sizeof(TestStruct));
 
-	printf("[test_block_morphing] ts1 address = [%d]. ts2 address = [%d]. ts3 address = [%d]. ts4 address = [%d].\n", ts1, ts2, ts3, ts4);
+	printf("[test_block_morphing] ts1 address = [%p]. ts2 address = [%p]. ts3 address = [%p]. ts4 address = [%p].\n", ts1, ts2, ts3, ts4);
 	my_mall_info();
 
-	printf("[test_block_morphing] Freeing ts1.\n");
-	fflush(stdout);
-	my_free(ts1);
-	my_mall_info();
+	// printf("[test_block_morphing] Freeing ts1.\n");
+	// fflush(stdout);
+	// my_free(ts1);
+	// my_mall_info();
 
 	printf("[test_block_morphing] Freeing ts3.\n");
 	fflush(stdout);
 	my_free(ts3);
 	my_mall_info();
 
-	// printf("[test_block_morphing] Freeing ts2. All 3 blocks should morph into one.\n");
-	// my_free(ts2);
-	// my_mall_info();
+	printf("[test_block_morphing] Freeing ts2. All 3 blocks should morph into one.\n");
+	my_free(ts2);
+	my_mall_info();
 }
 
 int main(void){
