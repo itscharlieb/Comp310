@@ -16,6 +16,12 @@ typedef struct {
 	char charArray[100];
 } TestStruct;
 
+typedef struct {
+	int anInt;
+	int anotherInt;
+	int hugo;
+} HugoStruct;
+
 void print_test_struct(TestStruct* ts){
 	printf("\n------------[print_test_struct]------------\n");
 	printf("anInt = [%d].\n", ts->anInt);
@@ -104,11 +110,25 @@ void test_block_morphing(){
 	// my_mall_info();
 }
 
+void test_free_block_recycling(){
+	TestStruct* ts1 = (TestStruct*)my_malloc(sizeof(TestStruct));
+	TestStruct* ts2 = (TestStruct*)my_malloc(sizeof(TestStruct));
+
+	my_free(ts1);
+	my_free(ts2);
+
+	printf("Creating two small structs.\n");
+	fflush(stdout);
+	HugoStruct* hs1 = (HugoStruct*)my_malloc(sizeof(HugoStruct));//should cause fragmentations
+	HugoStruct* hs2 = (HugoStruct*)my_malloc(sizeof(HugoStruct));
+}
+
 int main(void){
 	printf("\n[main] Size of TestStruct = [%d].\n", (int)sizeof(TestStruct));
+	printf("[main] Size of HugoStruct = [%d].\n", (int)sizeof(HugoStruct));
 	my_mall_info();
 
 	//test_general_functionality();
-	test_block_morphing();
-
+	//test_block_morphing();
+	test_free_block_recycling();
 }
