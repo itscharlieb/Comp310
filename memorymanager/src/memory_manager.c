@@ -27,18 +27,18 @@ If they are free, blocks have the following structure: (which breaks if the user
 #include <stdio.h>
 
 #define MAX_HEAP_SIZE 128000
-#define MY_MALLOC_TAG_SIZE 10 //2*4 for size fields, 2*1 for boolean field
+#define MY_MALLOC_TAG_SIZE 2 * 8 //2*4 for size fields, 2*1 for boolean field
 
 //for used blocks
 #define SIZE_FIELD_OFFSET 0
 #define FREE_FIELD_OFFSET 4
-#define OBJECT_FIELD_OFFSET 5
+#define OBJECT_FIELD_OFFSET 8
 
 //for free blocks
-#define PREVIOUS_FREE_BLOCK_POINTER_OFFSET 5
-#define NEXT_FREE_BLOCK_POINTER_OFFSET 9
-#define PREVIOUS_BLOCK_SIZE_FIELD_OFFSET -5
-#define PREVIOUS_BLOCK_FREE_FIELD_OFFSET -1
+#define PREVIOUS_FREE_BLOCK_POINTER_OFFSET OBJECT_FIELD_OFFSET
+#define NEXT_FREE_BLOCK_POINTER_OFFSET (PREVIOUS_FREE_BLOCK_POINTER_OFFSET + 4)
+#define PREVIOUS_BLOCK_SIZE_FIELD_OFFSET -8
+#define PREVIOUS_BLOCK_FREE_FIELD_OFFSET -4
 
 #define TRUE 1
 #define FALSE 0
@@ -53,22 +53,14 @@ unsigned int programEnd;
 int heapIsInitialized = FALSE;
 void* headFreeBlock = NULL;
 
-unsigned int numAllocatedBytes = 0;
+unsigned int numUsedBytes = 0;
 unsigned int numFreeBytes = 0;
 unsigned int maxFreeBlockSize = 0;
 unsigned int numBlocks = 0;
 unsigned int numFreeBlocks = 0;
 
-/***********************************DUMPS*****************************************/
-void dump_block(void* block){
-	printf("----------Dumping block-------------\n");
-	printf("Address = [%d].\n", block);
-	printf("Front size field = [%d].\n", *(int*)(block + SIZE_FIELD_OFFSET));
-	printf("Back size field = [%d].\n", *(int*)(block + block_object_size(block) + 5));
-	printf("Front free field = [%d].\n", *(int*)(block + FREE_FIELD_OFFSET));
-	printf("Back free field = [%d].\n", *(int*)(block + block_object_size(block) + 9));
-	printf("------------------------------------\n");
-}
+void dump_heap();
+void dump_block(void* block);
 
 /**********************************BLOCK GETTERS**********************************/
 //block helper functions for readability
@@ -110,6 +102,9 @@ void* previous_free_block(void* block){
 /*********************************BLOCK SETTERS************************************/
 void set_block_object_size(void* block, int size){
 	*(int*)(block + SIZE_FIELD_OFFSET) = size;
+
+	int* backSizeFieldAddress = block + size + MY_MALLOC_TAG_SIZE + PREVIOUS_BLOCK_SIZE_FIELD_OFFSET;
+	printf("[set_block_size] Back size field address = [%d].\n", backSizeFieldAddress);	
 	*(int*)(block + size + MY_MALLOC_TAG_SIZE + PREVIOUS_BLOCK_SIZE_FIELD_OFFSET) = size; //TODO refactor
 }
 
@@ -162,8 +157,10 @@ void* allocate_new_block(int size){
 	set_block_object_size(newBlock, size);
 	set_block_free(newBlock, FALSE);
 
-	numAllocatedBytes += size;
+	numUsedBytes += size;
 	numBlocks ++;
+
+	dump_block(newBlock);
 
 	return (void*)(newBlock + OBJECT_FIELD_OFFSET);
 }
@@ -190,6 +187,9 @@ void* my_malloc(int size){
 	//TODO deal with fragmentation
 	set_block_object_size(recyclyedFreeBlock, size);
 	set_block_free(recyclyedFreeBlock, FALSE);
+
+	//dump_heap();
+
 	return (void*)(recyclyedFreeBlock + OBJECT_FIELD_OFFSET);
 }
 
@@ -197,10 +197,15 @@ void* my_malloc(int size){
 
 //returns the address of the next free block after the paramter object
 void* find_next_free_block(void* block){
+	if(headFreeBlock == NULL){
+		return NULL;
+	}
+
 	void* tmpBlock = headFreeBlock;
 	while(tmpBlock != NULL && tmpBlock < block){
 		tmpBlock = next_free_block(tmpBlock);
 	}
+
 	return tmpBlock;
 }
 
@@ -223,80 +228,82 @@ void* find_previous_free_block(void* block){
 	return tmpBlock;
 }
 
-//morphs two neighboring blocks into one if both are free. Deals with updating pointers of blocks in the free block list
-void* morph_neighboring_blocks(void* left, void* right){
-	if(block_is_free(left) && block_is_free(right)){
-		numBlocks --;
-		numFreeBlocks --;
+//merges two neighboring free blocks by merging the right block into the left block
+void merge_neighboring_free_blocks(void* left, void* right){
+	void* mergedBlock = left;
+	int mergedBlockObjectSize = block_object_size(left) + block_object_size(right) + MY_MALLOC_TAG_SIZE;
+	set_block_object_size(mergedBlock, mergedBlockObjectSize);
 
+	numBlocks --;
+	numFreeBlocks --;
+	numFreeBytes += MY_MALLOC_TAG_SIZE; //because mergeing adds one tag size to the block object size
+	if(mergedBlockObjectSize > maxFreeBlockSize){
+		maxFreeBlockSize = mergedBlockObjectSize;
 	}
 }
 
-//combines the given free block with it's neighbors if either are free. Returns the address of the new free block (it only changes if the previous block is free)
-void* morph_freed_block_with_neighbors(void* freedBlock){
+//Combines the given free block with it's neighbors if either are free. 
+//Returns the address of the new free block (it only changes if the previous block is free)
+void* merge_freed_block_with_neighbors(void* freedBlock){
 	void* previousBlock = previous_block(freedBlock);
-	void* morphedBlock = freedBlock;
+	void* nextBlock = next_block(freedBlock);
+	void* mergedBlock = freedBlock;
 
-	//first, morph with previous block
 	if(previousBlock != NULL){
+		//printf("Previous is not null.\n");
 		if(block_is_free(previousBlock)){
-			//update statistics counters
-			numBlocks --;
-			numFreeBlocks --;
-
-			morphedBlock = previousBlock;
-
-			//|SIZE|TRUE|PREVIOUS|SIZE|TRUE|-|SIZE|TRUE|FREED|SIZE|TRUE|-|SIZE|T/F|NEXT|SIZE|T/F|
-			int morphedBlockSize = block_object_size(previousBlock) + block_object_size(freedBlock) + MY_MALLOC_TAG_SIZE;
-			printf("morphedBlockSize after morph with previous = [%d].\n", morphedBlockSize);
-			set_block_object_size(morphedBlock, (morphedBlockSize - MY_MALLOC_TAG_SIZE));
-			//|SIZE|TRUE|-------------MORPHED----------------|SIZE|TRUE|-|SIZE|T/F|NEXT|SIZE|T/F|
+			printf("Previous is free.\n");
+			merge_neighboring_free_blocks(previousBlock, freedBlock);
+			mergedBlock = previousBlock;
 		}
 	}
 
-	printf("Dumping morphed block after morph with previous.\n");
-	dump_block(morphedBlock);
-
-	//then morph with next block, making 3 block morph if necessary
-	void* nextBlock = next_block(morphedBlock);
 	if(nextBlock != NULL){
+		//printf("Next is not null.\n");
 		if(block_is_free(nextBlock)){
-			//update statistics counters
-			numBlocks --;
-			numFreeBlocks --;
-			//|SIZE|TRUE|MORPHED|TRUE|FREE|-|SIZE|TRUE|NEXT|SIZE|TRUE|
-			int morphedBlockSize = block_object_size(morphedBlock) + block_object_size(nextBlock) + MY_MALLOC_TAG_SIZE;
-			printf("morphedBlockSize after morph with next = [%d].\n", morphedBlockSize);
-			set_block_object_size(morphedBlock, (morphedBlockSize - MY_MALLOC_TAG_SIZE));
-			//|SIZE|TRUE|------------MORPHED---------------|SIZE|TRUE|
+			printf("[Merge] Next is free.\n");
+			merge_neighboring_free_blocks(mergedBlock, nextBlock);
 		}
 	}
 
-	printf("Dumping morphed block after morph with next.\n");
-	dump_block(morphedBlock);
-
-	return morphedBlock;
+	return mergedBlock;
 }
 
 //frees data associated with the freedObject at the parameter address
 void my_free(void* freedObject){
+	printf("[my_free] Initial block state.\n");
+	dump_heap();
+
 	void* freedBlock = (void*)(freedObject - OBJECT_FIELD_OFFSET);
+	numUsedBytes -= block_object_size(freedBlock);
+	numFreeBytes += block_object_size(freedBlock);
+
 	set_block_free(freedBlock, TRUE);
 	numFreeBlocks ++; //statistics counter
 
-	freedBlock = morph_freed_block_with_neighbors(freedBlock);
-
 	if(headFreeBlock == NULL){
+		// printf("[my_free] Initial head free block state.\n");
+		// dump_block(freedBlock);
+
+		printf("[my_free] Setting head block next/prev pointers to null.\n");
+
 		headFreeBlock = freedBlock;
 		set_next_free_block(headFreeBlock, NULL);
 		set_previous_free_block(headFreeBlock, NULL);
+		dump_block(freedBlock);
 	}
 
 	else{
+		//dump_heap();
+
+		freedBlock = merge_freed_block_with_neighbors(freedBlock);
+
+		//both of the neighboring free blocks can be null
 		void* previousFreeBlock = find_previous_free_block(freedBlock);
 		void* nextFreeBlock = find_next_free_block(freedBlock);
 
-		//both of the neighboring free blocks can be null
+		printf("previousFreeBlock address = [%d]. nextFreeBlock address = [%d].\n", previousBlock, nextFreeBlock);
+
 		set_previous_free_block(freedBlock, previousFreeBlock);
 		set_next_free_block(freedBlock, nextFreeBlock);
 
@@ -308,15 +315,8 @@ void my_free(void* freedObject){
 		}
 	}
 
-	//update heap stats
-	int freedBlockObjectSize = block_object_size(freedBlock);
-	printf("Freed block object size after morphing = [%d].\n", freedBlockObjectSize);
-
-	numAllocatedBytes -= freedBlockObjectSize;
-	numFreeBytes += freedBlockObjectSize;
-	if(freedBlockObjectSize > maxFreeBlockSize){
-		maxFreeBlockSize = freedBlockObjectSize;
-	}
+	printf("[my_free] Done with free.\n");
+	dump_heap();
 }
 
 //specifies the free block list policy
@@ -333,13 +333,46 @@ void my_mall_opt(int policy){
 void my_mall_info(){
 	printf("\n-------------------------------------------\n");
 	printf("[my_mall_info] Printing current heap state.\n");
-	printf("Number of bytes used = [%d].\n", numAllocatedBytes);
+	printf("Number of bytes used = [%d].\n", numUsedBytes);
 	printf("Number of bytes free = [%d].\n", numFreeBytes);
 	printf("Number of blocks = [%d].\n", numBlocks);
 	printf("Number of free blocks = [%d].\n", numFreeBlocks);
 	printf("Size of the largest free block = [%d].\n", maxFreeBlockSize);
 	//printf("Current program break = [%d].\n", sbrk(0));
 	printf("-------------------------------------------\n\n");
+}
+
+/***********************************DUMPS*****************************************/
+void dump_block(void* block){
+	printf("----------Dumping block-------------\n");
+	printf("Address = [%d].\n", block);
+	printf("Front size field = [%d].\n", *(int*)(block + SIZE_FIELD_OFFSET));
+	printf("Back size field = [%d].\n", *(int*)(block + block_object_size(block) + MY_MALLOC_TAG_SIZE + PREVIOUS_BLOCK_SIZE_FIELD_OFFSET));
+	printf("Front free field = [%d].\n", *(int*)(block + FREE_FIELD_OFFSET));
+	printf("Back free field = [%d].\n", *(int*)(block + block_object_size(block) + MY_MALLOC_TAG_SIZE + PREVIOUS_BLOCK_FREE_FIELD_OFFSET));
+	if(block_is_free(block)){
+		printf("Previous free block is at address [%d].\n", previous_free_block(block));
+		printf("Next free block is at address [%d].\n", next_free_block(block));
+	}
+	printf("------------------------------------\n");
+}
+
+void dump_heap(){
+	printf("------------Dumping Heap--------------\n");
+	void* tmpBlock = programEnd;
+	while(tmpBlock != NULL){
+		int isFree = block_is_free(tmpBlock);
+		int size = block_object_size(tmpBlock);
+		if(isFree){
+			printf("Address [%d] - |%d|%d|%d|%d|%d|%d|\n", tmpBlock, size, isFree, previous_free_block(tmpBlock), next_free_block(tmpBlock), size, isFree);
+		}
+		else{
+			printf("Address [%d] - |%d|%d|%d bytes|%d|%d|\n", tmpBlock, size, isFree, size, size, isFree);
+		}
+		//printf("Next block address = [%d].\n", next_block(tmpBlock));
+		tmpBlock = next_block(tmpBlock);
+	}
+	printf("-----------------------------------\n");
 }
 
 #endif
