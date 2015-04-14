@@ -20,4 +20,7 @@ void my_mall_opt(int policy);
 //prints the current heap state to stdout
 void my_mall_info();
 
+//0 for false, 1 for true
+void set_debug(int debugMode);
+
 #endif

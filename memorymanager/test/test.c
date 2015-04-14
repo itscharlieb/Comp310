@@ -69,8 +69,8 @@ void test_general_functionality(){
 	my_mall_info();
 }
 
-void test_block_morphing(){
-	printf("[test_block_morphing] Creating test structs.\n");
+void test_block_merging(){
+	printf("[test_block_merging] Creating seven test structs.\n");
 	TestStruct* ts1 = (TestStruct*)my_malloc(sizeof(TestStruct));
 	TestStruct* ts2 = (TestStruct*)my_malloc(sizeof(TestStruct));
 	TestStruct* ts3 = (TestStruct*)my_malloc(sizeof(TestStruct));
@@ -81,33 +81,33 @@ void test_block_morphing(){
 
 	my_mall_info();
 
-	printf("[test_block_morphing] Freeing ts1.\n");
+	printf("[test_block_merging] Freeing ts1.\n");
 	fflush(stdout);
 	my_free(ts1);
 	my_mall_info();
 
-	printf("[test_block_morphing] Freeing ts5.\n");
+	printf("[test_block_merging] Freeing ts5.\n");
 	my_free(ts5);
 	my_mall_info();
 
-	printf("[test_block_morphing] Freeing ts7.\n");
+	printf("[test_block_merging] Freeing ts7.\n");
 	my_free(ts7);
 	my_mall_info();
 
-	printf("[test_block_morphing] Freeing ts3.\n");
+	printf("[test_block_merging] Freeing ts3.\n");
 	fflush(stdout);
 	my_free(ts3);
 	my_mall_info();
 
-	printf("[test_block_morphing] Freeing ts2, ts6, ts4 respectively.\n");
+	printf("[test_block_merging] Freeing ts2, ts6, ts4 respectively.\n");
 	my_free(ts2);
 	my_free(ts6);
 	my_free(ts4);
 	my_mall_info();
 
-	// printf("[test_block_morphing] Freeing ts2. All 3 blocks should morph into one.\n");
-	// my_free(ts2);
-	// my_mall_info();
+	printf("[test_block_merging] Freeing ts2. All 3 blocks should merge into one.\n");
+	my_free(ts2);
+	my_mall_info();
 }
 
 void test_free_block_recycling(){
@@ -123,12 +123,21 @@ void test_free_block_recycling(){
 	HugoStruct* hs2 = (HugoStruct*)my_malloc(sizeof(HugoStruct));
 }
 
+void test_my_malloc_error(){
+	void* v1 = my_malloc(128001);
+	printf("%s\n", my_malloc_error);
+
+	void* v2 = my_malloc(-1);
+	printf("%s\n", my_malloc_error);
+}
+
 int main(void){
 	printf("\n[main] Size of TestStruct = [%d].\n", (int)sizeof(TestStruct));
 	printf("[main] Size of HugoStruct = [%d].\n", (int)sizeof(HugoStruct));
-	my_mall_info();
+	my_mall_info();//initial state should be empty
 
 	//test_general_functionality();
-	//test_block_morphing();
-	test_free_block_recycling();
+	//test_block_merging();
+	//test_free_block_recycling();
+	//test_my_malloc_error();
 }

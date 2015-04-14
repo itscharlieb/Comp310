@@ -1,0 +1,6 @@
+There's an error in the block/heap dump code that causes the state of the block/heap to be printed improperly, so the debug statements are not very helpful (for some reason some pointers are printed as 64 bit pointers, not 32 bit). That said, all of the required functionality works to the best of my knowledge. You can turn on/of the debug statements by calling set_debug(TRUE/FALSE) at the beginning of your code. 
+
+I use 16 byte data tags for each object placed on the heap - 2x 4 bytes for the size fields, 2x 4 bytes for the free fields. This could be cut to 8 bytes if I put the free bit on the end of the size field and decreased my pointer (and that could be cut to 4 bytes if I limited block size to 65kB), but I skipped this for simplicity. I also require that blocks must have at least 8 bytes so that there is sufficient space for previous/next free block pointers when the block is later freed. This means that if the client code requests a size of 4 bytes, it will be given 8 bytes unknowignly. 
+
+Thank you,
+Charlie

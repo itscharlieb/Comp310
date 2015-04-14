@@ -49,6 +49,8 @@ If they are free, blocks have the following structure: (which breaks if the user
 #define FIRST_FIT 1
 #define BEST_FIT 0
 
+int debug = FALSE;
+char* my_malloc_error;
 int myMallocPolicy = BEST_FIT;
 unsigned int programBreak;
 void* programEnd;
@@ -170,8 +172,8 @@ void* allocate_new_block(int size){
 }
 
 void fragment_recycled_block(void* recyclyedBlock, int requestedSize){
-	printf("Fragmenting recycled block. New block size will be [%d].\n", requestedSize);
-	dump_block(recyclyedBlock);
+	if(debug) printf("Fragmenting recycled block. New block size will be [%d].\n", requestedSize);
+	if(debug) dump_block(recyclyedBlock);
 
 	int recycledBlockObjectSize = block_object_size(recyclyedBlock);
 	if(recycledBlockObjectSize - requestedSize >= MIN_FRAGMENTATION_OBJECT_SIZE_DIFFERENCE){
@@ -193,18 +195,28 @@ void fragment_recycled_block(void* recyclyedBlock, int requestedSize){
 		set_block_free(recyclyedBlock, FALSE);
 	}
 
-	dump_heap();
+	if(debug) dump_heap();
 }
 
 
 //allocates size bytes on the heap
 void* my_malloc(int requestedSize){
-	if(!heapIsInitialized){
+	if(requestedSize <= 0){
+		my_malloc_error = "You must allocated one or more bytes.";
+		return;
+	}
+
+	if(numUsedBytes + numFreeBytes + (numBlocks * MY_MALLOC_TAG_SIZE) + requestedSize > MAX_HEAP_SIZE){
+		my_malloc_error = "Previous allocation would cause a heap overflow error!";
+		return;
+	}
+
+	if(!heapIsInitialized){ //saves the program end at first malloc invocation
 		programEnd = sbrk(0);
 		heapIsInitialized = TRUE;
 	}
 
-	if(requestedSize < MIN_OBJECT_SIZE){
+	if(requestedSize < MIN_OBJECT_SIZE){ //need 8 bytes for next/prev free block pointers when a block is freed
 		requestedSize = MIN_OBJECT_SIZE;
 	}
 
@@ -293,7 +305,7 @@ void* merge_freed_block_with_neighbors(void* freedBlock){
 	void* mergedBlock = freedBlock;
 
 	if(previousBlock != NULL){
-		//printf("Previous is not null.\n");
+		if(debug) printf("Previous is not null.\n");
 		if(block_is_free(previousBlock)){
 			merge_neighboring_free_blocks(previousBlock, freedBlock);
 			mergedBlock = previousBlock;
@@ -301,7 +313,7 @@ void* merge_freed_block_with_neighbors(void* freedBlock){
 	}
 
 	if(nextBlock != NULL){
-		//printf("Next is not null.\n");
+		if(debug) printf("Next is not null.\n");
 		if(block_is_free(nextBlock)){
 			merge_neighboring_free_blocks(mergedBlock, nextBlock);
 		}
@@ -312,11 +324,11 @@ void* merge_freed_block_with_neighbors(void* freedBlock){
 
 //frees data associated with the freedObject at the parameter address
 void my_free(void* freedObject){
-	dump_heap();
+	if(debug) dump_heap();
 
 	void* freedBlock = (void*)(freedObject - OBJECT_FIELD_OFFSET);
 	if(block_is_free(freedBlock)){
-		//my_malloc_error = "No freeing of already freed blocks in my program!";
+		my_malloc_error = "No freeing of already freed blocks in my program!";
 		return;
 	}
 
@@ -327,10 +339,11 @@ void my_free(void* freedObject){
 	numFreeBlocks ++; //statistics counter
 
 	if(headFreeBlock == NULL){
+		if(debug) printf("First free - assigning head block pointer.\n");
 		headFreeBlock = freedBlock;
 		set_next_free_block(headFreeBlock, NULL);
 		set_previous_free_block(headFreeBlock, NULL);
-		dump_block(freedBlock);
+		if(debug) dump_block(freedBlock);
 	}
 
 	else{
@@ -367,6 +380,12 @@ void my_mall_info(){
 	printf("Size of the largest free block = [%d].\n", maxFreeBlockSize);
 	//printf("Current program break = [%d].\n", sbrk(0));
 	printf("-------------------------------------------\n\n");
+}
+
+/*******************************DEBUG MODE***************************************/
+
+void set_debug(int debugMode){
+	debugMode ? TRUE : FALSE;
 }
 
 /***********************************DUMPS*****************************************/
